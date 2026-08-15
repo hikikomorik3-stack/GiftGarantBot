@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GiftGarant App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --hint-color: #94a3b8;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --success-color: #22c55e;
+            --border-color: #334155;
+            --input-bg: #0f172a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 16px;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            margin: 0;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .header p {
+            color: var(--hint-color);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            color: #fff;
+        }
+
+        .user-details h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .user-details p {
+            margin: 2px 0 0;
+            font-size: 12px;
+            color: var(--hint-color);
+        }
+
+        .field-group {
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: var(--hint-color);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            color: var(--text-color);
+            font-size: 14px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent-color);
+        }
+
+        .btn {
+            width: 100%;
+            background-color: var(--accent-color);
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--hint-color);
+            margin-top: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            color: var(--hint-color);
+        }
+
+        .tab.active {
+            background: var(--accent-color);
+            color: #fff;
+            border-color: var(--accent-color);
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🛡️ GiftGarant</h1>
+        <p>Безопасное проведение сделок NFT</p>
+    </div>
+
+    <!-- Инфо профиля -->
+    <div class="card">
+        <div class="user-info">
+            <div class="avatar" id="avatar">?</div>
+            <div class="user-details">
+                <h3 id="user_name">Загрузка...</h3>
+                <p id="user_id">ID: ...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Вкладки навигации -->
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('create')">Создать сделку</div>
+        <div class="tab" onclick="switchTab('info')">Инструкция</div>
+    </div>
+
+    <!-- Раздел: Создание сделки -->
+    <div id="section-create" class="section active">
+        <div class="card">
+            <div class="field-group">
+                <label>Ваша роль в сделке</label>
+                <select id="role">
+                    <option value="buyer">🛒 Я — Продавец (получаю оплату)</option>
+                    <option value="seller">💰 Я — Покупатель (перевожу деньги)</option>
+                </select>
+            </div>
+
+            <div class="field-group">
+                <label>Ссылка на NFT (Gift)</label>
+                <input type="text" id="nft" placeholder="t.me/nft/... или https://t.me/nft/...">
+            </div>
+
+            <div class="field-group">
+                <label>Сумма сделки</label>
+                <input type="number" id="amount" placeholder="Введите сумму">
+            </div>
+
+            <div class="field-group">
+                <label>Валюта</label>
+                <select id="currency">
+                    <option value="RUB">RUB (₽)</option>
+                    <option value="USDT">USDT</option>
+                    <option value="TON">TON</option>
+                    <option value="Stars">Stars (⭐)</option>
+                    <option value="UAH">UAH (₴)</option>
+                    <option value="KZT">KZT (₸)</option>
+                </select>
+            </div>
+
+            <div class="field-group" id="payment-method-group">
+                <label>Способ получения оплаты</label>
+                <select id="pay_method">
+                    <option value="card">💳 Банковская карта</option>
+                    <option value="ton">💎 TON Кошелёк</option>
+                    <option value="stars">⭐ Telegram Stars</option>
+                </select>
+            </div>
+
+            <div class="field-group" id="payment-details-group">
+                <label id="pay_details_label">Реквизиты оплаты (карта / кошелек)</label>
+                <input type="text" id="pay_details" placeholder="Введите номер карты или кошелька">
+            </div>
+
+            <button class="btn" id="submit-btn">✅ Создать сделку</button>
+        </div>
+    </div>
+
+    <!-- Раздел: Инструкция -->
+    <div id="section-info" class="section">
+        <div class="card">
+            <h3 style="margin-top: 0; font-size: 15px;">Как проходят сделки?</h3>
+            <ol style="padding-left: 20px; font-size: 13px; color: var(--hint-color); line-height: 1.6;">
+                <li>Вы заполняете форму и создаёте сделку.</li>
+                <li>Бот выдаёт пригласительную ссылку для партнёра.</li>
+                <li>Покупатель производит оплату, а продавец передаёт подарок гаранту.</li>
+                <li>После проверки стороны получают свои средства и предметы.</li>
+            </ol>
+        </div>
+    </div>
+
+    <button class="btn btn-secondary" onclick="tg.close()">Закрыть</button>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Отображение данных профиля Telegram
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            const user = tg.initDataUnsafe.user;
+            document.getElementById('user_name').innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+            document.getElementById('user_id').innerText = 'ID: ' + user.id;
+            document.getElementById('avatar').innerText = user.first_name ? user.first_name[0].toUpperCase() : '?';
+        }
+
+        // Переключение вкладок
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            
+            if (tabName === 'create') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('section-create').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('section-info').classList.add('active');
+            }
+        }
+
+        // Обработка кнопки «Создать сделку»
+        document.getElementById('submit-btn').addEventListener('click', () => {
+            const role = document.getElementById('role').value;
+            const nft = document.getElementById('nft').value.trim();
+            const amount = document.getElementById('amount').value.trim();
+            const currency = document.getElementById('currency').value;
+            const payMethod = document.getElementById('pay_method').value;
+            const payDetails = document.getElementById('pay_details').value.trim();
+
+            if (!nft.startsWith('t.me/') && !nft.startsWith('https://t.me/') && !nft.startsWith('http://t.me/')) {
+                tg.showAlert('Укажите корректную ссылку на NFT (например, t.me/nft/...)');
+                return;
+            }
+
+            if (!amount || isNaN(amount) || Number(amount) <= 0) {
+                tg.showAlert('Введите корректную сумму сделки.');
+                return;
+            }
+
+            const data = {
+                action: 'create_deal',
+                role: role,
+                nfts: [nft],
+                amount: Number(amount),
+                currency: currency,
+                payment_method: payMethod,
+                payment_details: payDetails
+            };
+
+            // Отправка данных боту и закрытие Mini App
+            tg.sendData(JSON.stringify(data));
+        });
+    </script>
+</body>
+</html>
