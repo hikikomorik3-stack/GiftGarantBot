@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GiftGarant App</title>
+    <title>GiftGarant Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -14,6 +14,7 @@
             --accent-color: #3b82f6;
             --accent-hover: #2563eb;
             --success-color: #22c55e;
+            --warning-color: #f59e0b;
             --border-color: #334155;
             --input-bg: #0f172a;
         }
@@ -30,7 +31,7 @@
 
         .header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .header h1 {
@@ -131,6 +132,10 @@
             transform: scale(0.98);
         }
 
+        .btn-success {
+            background-color: var(--success-color);
+        }
+
         .btn-secondary {
             background-color: transparent;
             border: 1px solid var(--border-color);
@@ -170,16 +175,53 @@
         .section.active {
             display: block;
         }
+
+        .badge-seller {
+            background-color: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            display: inline-block;
+        }
+
+        .badge-buyer {
+            background-color: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            display: inline-block;
+        }
+
+        .info-box {
+            background-color: rgba(51, 65, 85, 0.5);
+            border-left: 4px solid var(--accent-color);
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-bottom: 14px;
+            line-height: 1.4;
+        }
+
+        .pay-details-box {
+            background-color: #0f172a;
+            border: 1px dashed var(--accent-color);
+            padding: 12px;
+            border-radius: 10px;
+            margin: 12px 0;
+            word-break: break-all;
+        }
     </style>
 </head>
 <body>
 
     <div class="header">
         <h1>🛡️ GiftGarant</h1>
-        <p>Безопасное проведение сделок NFT</p>
+        <p>Безопасные сделки Telegram NFT & Gifts</p>
     </div>
 
-    <!-- Инфо профиля -->
+    <!-- Профиль -->
     <div class="card">
         <div class="user-info">
             <div class="avatar" id="avatar">?</div>
@@ -190,7 +232,7 @@
         </div>
     </div>
 
-    <!-- Вкладки навигации -->
+    <!-- Вкладки -->
     <div class="tabs">
         <div class="tab active" onclick="switchTab('create')">Создать сделку</div>
         <div class="tab" onclick="switchTab('info')">Инструкция</div>
@@ -199,17 +241,18 @@
     <!-- Раздел: Создание сделки -->
     <div id="section-create" class="section active">
         <div class="card">
+            
             <div class="field-group">
                 <label>Ваша роль в сделке</label>
-                <select id="role">
-                    <option value="buyer">🛒 Я — Продавец (получаю оплату)</option>
-                    <option value="seller">💰 Я — Покупатель (перевожу деньги)</option>
+                <select id="role" onchange="toggleRoleFields()">
+                    <option value="seller">🛒 Я — Продавец (получаю деньги, отдаю NFT)</option>
+                    <option value="buyer">💰 Я — Покупатель (перевожу деньги, получаю NFT)</option>
                 </select>
             </div>
 
             <div class="field-group">
-                <label>Ссылка на NFT (Gift)</label>
-                <input type="text" id="nft" placeholder="t.me/nft/... или https://t.me/nft/...">
+                <label>Ссылка на NFT / Gift</label>
+                <input type="text" id="nft" placeholder="https://t.me/nft/... или t.me/nft/...">
             </div>
 
             <div class="field-group">
@@ -221,46 +264,61 @@
                 <label>Валюта</label>
                 <select id="currency">
                     <option value="RUB">RUB (₽)</option>
-                    <option value="USDT">USDT</option>
-                    <option value="TON">TON</option>
+                    <option value="USDT">USDT ($)</option>
+                    <option value="TON">TON (💎)</option>
                     <option value="Stars">Stars (⭐)</option>
                     <option value="UAH">UAH (₴)</option>
                     <option value="KZT">KZT (₸)</option>
                 </select>
             </div>
 
-            <div class="field-group" id="payment-method-group">
-                <label>Способ получения оплаты</label>
-                <select id="pay_method">
-                    <option value="card">💳 Банковская карта</option>
-                    <option value="ton">💎 TON Кошелёк</option>
-                    <option value="stars">⭐ Telegram Stars</option>
-                </select>
+            <!-- Блок для ПРОДАВЦА: реквизиты оплаты -->
+            <div id="seller-payment-section">
+                <div class="info-box">
+                    💡 Как продавец, укажите способ и реквизиты, куда покупатель переведет вам деньги.
+                </div>
+
+                <div class="field-group">
+                    <label>Способ получения оплаты</label>
+                    <select id="pay_method" onchange="updatePayDetailsLabel()">
+                        <option value="card">💳 Банковская карта</option>
+                        <option value="ton">💎 TON Кошелёк</option>
+                        <option value="stars">⭐ Telegram Stars</option>
+                    </select>
+                </div>
+
+                <div class="field-group">
+                    <label id="pay_details_label">Номер банковской карты</label>
+                    <input type="text" id="pay_details" placeholder="Введите номер карты без пробелов">
+                </div>
             </div>
 
-            <div class="field-group" id="payment-details-group">
-                <label id="pay_details_label">Реквизиты оплаты (карта / кошелек)</label>
-                <input type="text" id="pay_details" placeholder="Введите номер карты или кошелька">
+            <!-- Блок для ПОКУПАТЕЛЯ: подсказка -->
+            <div id="buyer-notice-section" style="display: none;">
+                <div class="info-box">
+                    ℹ️ Вы покупатель. Вводить номер карты <b>не нужно</b>. После создания сделки вы получите реквизиты продавца для оплаты.
+                </div>
             </div>
 
-            <button class="btn" id="submit-btn">✅ Создать сделку</button>
+            <button class="btn" id="submit-btn">✅ Создать сделку и отправить в бот</button>
         </div>
     </div>
 
     <!-- Раздел: Инструкция -->
     <div id="section-info" class="section">
         <div class="card">
-            <h3 style="margin-top: 0; font-size: 15px;">Как проходят сделки?</h3>
-            <ol style="padding-left: 20px; font-size: 13px; color: var(--hint-color); line-height: 1.6;">
-                <li>Вы заполняете форму и создаёте сделку.</li>
-                <li>Бот выдаёт пригласительную ссылку для партнёра.</li>
-                <li>Покупатель производит оплату, а продавец передаёт подарок гаранту.</li>
-                <li>После проверки стороны получают свои средства и предметы.</li>
+            <h3 style="margin-top: 0; font-size: 15px;">🛡️ Порядок проведения сделки:</h3>
+            <ol style="padding-left: 20px; font-size: 13px; color: var(--hint-color); line-height: 1.7;">
+                <li><b>Создание:</b> Продавец или Покупатель создает сделку в приложении.</li>
+                <li><b>Вступление:</b> Второму участнику отправляется уникальная ссылка.</li>
+                <li><b>Оплата:</b> Покупатель переводит средства по реквизитам Продавца.</li>
+                <li><b>Передача:</b> Продавец отправляет NFT / Gift Гаранту сервиса.</li>
+                <li><b>Завершение:</b> После подтверждения стороны получают зафиксированные активы.</li>
             </ol>
         </div>
     </div>
 
-    <button class="btn btn-secondary" onclick="tg.close()">Закрыть</button>
+    <button class="btn btn-secondary" onclick="tg.close()">Закрыть приложение</button>
 
     <script>
         const tg = window.Telegram.WebApp;
@@ -272,6 +330,39 @@
             document.getElementById('user_name').innerText = user.first_name + (user.last_name ? ' ' + user.last_name : '');
             document.getElementById('user_id').innerText = 'ID: ' + user.id;
             document.getElementById('avatar').innerText = user.first_name ? user.first_name[0].toUpperCase() : '?';
+        }
+
+        // Переключение полей в зависимости от роли
+        function toggleRoleFields() {
+            const role = document.getElementById('role').value;
+            const sellerSection = document.getElementById('seller-payment-section');
+            const buyerSection = document.getElementById('buyer-notice-section');
+
+            if (role === 'seller') {
+                sellerSection.style.display = 'block';
+                buyerSection.style.display = 'none';
+            } else {
+                sellerSection.style.display = 'none';
+                buyerSection.style.display = 'block';
+            }
+        }
+
+        // Подсказки к полям ввода реквизитов
+        function updatePayDetailsLabel() {
+            const method = document.getElementById('pay_method').value;
+            const label = document.getElementById('pay_details_label');
+            const input = document.getElementById('pay_details');
+
+            if (method === 'card') {
+                label.innerText = 'Номер банковской карты';
+                input.placeholder = 'Введите номер карты';
+            } else if (method === 'ton') {
+                label.innerText = 'Адрес TON Кошелька';
+                input.placeholder = 'EQ... или UQ...';
+            } else if (method === 'stars') {
+                label.innerText = 'Количество Stars / Способ передачи';
+                input.placeholder = 'Укажите кол-во звёзд';
+            }
         }
 
         // Переключение вкладок
@@ -288,7 +379,7 @@
             }
         }
 
-        // Обработка кнопки «Создать сделку»
+        // Обработка клика по «Создать сделку»
         document.getElementById('submit-btn').addEventListener('click', () => {
             const role = document.getElementById('role').value;
             const nft = document.getElementById('nft').value.trim();
@@ -303,7 +394,13 @@
             }
 
             if (!amount || isNaN(amount) || Number(amount) <= 0) {
-                tg.showAlert('Введите корректную сумму сделки.');
+                tg.showAlert('Введите корректную сумму сделки цифрами.');
+                return;
+            }
+
+            // Проверка реквизитов только если создает ПРОДАВЕЦ
+            if (role === 'seller' && !payDetails) {
+                tg.showAlert('Укажите реквизиты для получения оплаты!');
                 return;
             }
 
@@ -313,13 +410,16 @@
                 nfts: [nft],
                 amount: Number(amount),
                 currency: currency,
-                payment_method: payMethod,
-                payment_details: payDetails
+                payment_method: role === 'seller' ? payMethod : null,
+                payment_details: role === 'seller' ? payDetails : null
             };
 
-            // Отправка данных боту и закрытие Mini App
+            // Передача сформированных данных обратно боту
             tg.sendData(JSON.stringify(data));
         });
+
+        // Первичная инициализация
+        toggleRoleFields();
     </script>
 </body>
 </html>
