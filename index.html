@@ -6,31 +6,219 @@
 <title>Gift Garant</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-:root{--bg:#090d16;--card:#131b2e;--text:#f1f5f9;--hint:#94a3b8;--accent:#6366f1;--border:#1e293b;--input:#0b1120;--ok:#10b981}*{box-sizing:border-box}body{margin:0;padding:16px;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}.head{text-align:center}.head h1{margin:0}.head p{color:var(--hint);font-size:13px}.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin:16px 0}.row{display:flex;gap:12px;align-items:center}.avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#a855f7);display:grid;place-items:center;font-weight:bold}.small{font-size:12px;color:var(--hint);margin-top:3px}.tabs{display:flex;gap:8px}.tab{flex:1;text-align:center;padding:10px;border-radius:10px;background:var(--card);border:1px solid var(--border);color:var(--hint)}.tab.active{background:var(--accent);color:#fff}.section{display:none}.section.active{display:block}.field{margin:14px 0}label{display:block;color:var(--hint);font-size:13px;margin-bottom:6px}input,select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--input);color:var(--text);font-size:14px}button{width:100%;padding:14px;margin-top:8px;border:0;border-radius:12px;background:var(--accent);color:#fff;font-size:15px;font-weight:bold}.secondary{background:transparent;border:1px solid var(--border);color:var(--hint)}.info{padding:11px;border-left:4px solid var(--accent);background:#1e293d99;border-radius:6px;font-size:13px;line-height:1.4}.success{display:none;border:1px solid var(--ok);background:#10b98122;border-radius:12px;padding:14px;margin-top:14px}.link{padding:10px;background:var(--input);border:1px dashed var(--accent);border-radius:8px;word-break:break-all;color:#38bdf8;font-size:12px;margin:10px 0}
+:root{--bg:#090d16;--card:#131b2e;--text:#f1f5f9;--hint:#94a3b8;--accent:#6366f1;--border:#1e293b;--input:#0b1120;--ok:#10b981}
+*{box-sizing:border-box}
+body{margin:0;padding:16px;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,Roboto,sans-serif}
+.head{text-align:center;margin-bottom:12px}
+.head h1{margin:0;font-size:22px;color:#fff}
+.head p{color:var(--hint);font-size:13px;margin-top:4px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px}
+.row{display:flex;gap:12px;align-items:center}
+.avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#a855f7);display:grid;place-items:center;font-weight:bold;color:#fff}
+.small{font-size:12px;color:var(--hint);margin-top:2px}
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tab{flex:1;text-align:center;padding:10px;border-radius:10px;background:var(--card);border:1px solid var(--border);color:var(--hint);cursor:pointer;font-size:13px}
+.tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.section{display:none}
+.section.active{display:block}
+.field{margin-bottom:14px}
+label{display:block;color:var(--hint);font-size:13px;margin-bottom:6px}
+input,select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--input);color:var(--text);font-size:14px;outline:none}
+button{width:100%;padding:14px;margin-top:8px;border:0;border-radius:12px;background:var(--accent);color:#fff;font-size:15px;font-weight:bold;cursor:pointer}
+button:active{transform:scale(.98)}
+.secondary{background:transparent;border:1px solid var(--border);color:var(--hint)}
+.info{padding:11px;border-left:4px solid var(--accent);background:#1e293d99;border-radius:6px;font-size:13px;line-height:1.4;margin-bottom:14px}
+.success{display:none;border:1px solid var(--ok);background:#10b98122;border-radius:12px;padding:14px;margin-top:14px}
+.link{padding:10px;background:var(--input);border:1px dashed var(--accent);border-radius:8px;word-break:break-all;color:#38bdf8;font-size:12px;margin:10px 0}
 </style>
 </head>
 <body>
-<div class="head"><h1>🔮 Gift Garant</h1><p>Безопасные сделки Telegram NFT &amp; Gifts</p></div>
-<div class="card"><div class="row"><div class="avatar" id="avatar">?</div><div><b id="name">Загрузка...</b><div class="small" id="userid">ID: ...</div></div></div></div>
-<div class="tabs"><div class="tab active" id="createTab">Создать сделку</div><div class="tab" id="infoTab">Инструкция</div></div>
-<section class="section active" id="createSection"><div class="card">
-<div class="field"><label>Ваша роль в сделке</label><select id="role"><option value="seller">♓️ Я продавец</option><option value="buyer">🆔 Я покупатель</option></select></div>
-<div class="field"><label>Ссылка на NFT / Gift</label><input id="nft" placeholder="https://t.me/nft/... или t.me/nft/..."></div>
-<div class="field"><label>Сумма сделки</label><input id="amount" type="number" min="0.01" step="any" placeholder="Введите сумму"></div>
-<div class="field"><label>Валюта</label><select id="currency"><option>RUB</option><option>USDT</option><option>TON</option><option>Stars</option><option>UAH</option><option>KZT</option></select></div>
-<div id="sellerFields"><div class="info">💡 Укажите реквизиты, куда вы хотите получить оплату.</div><div class="field"><label>Способ получения оплаты</label><select id="method"><option value="card">💳 Банковская карта</option><option value="ton">💎 TON Кошелёк</option><option value="stars">⭐ Telegram Stars</option></select></div><div class="field"><label>Реквизиты продавца</label><input id="details" placeholder="Введите реквизиты"></div></div>
-<div class="info" id="buyerNotice" style="display:none">Вы покупатель. После создания сделки вы получите реквизиты ОТС гаранта для оплаты</div>
-<button id="submit">✅ Создать сделку</button><div class="success" id="success"><b>✅ Данные отправлены!</b><p>Бот создаёт сделку и пришлёт настоящую пригласительную ссылку отдельным сообщением.</p></div>
-</div></section>
-<section class="section" id="infoSection"><div class="card"><h3>🛡️ Порядок проведения сделки</h3><ol style="color:var(--hint);line-height:1.7;font-size:13px"><li>Заполните форму.</li><li>Нажмите «Создать сделку».</li><li>Бот сохранит сделку в SQLite.</li><li>Бот отправит настоящую ссылку.</li></ol></div></section>
+
+<div class="head">
+  <h1>🔮 Gift Garant</h1>
+  <p>Безопасные сделки Telegram NFT &amp; Gifts</p>
+</div>
+
+<div class="card">
+  <div class="row">
+    <div class="avatar" id="avatar">?</div>
+    <div>
+      <b id="name">Загрузка...</b>
+      <div class="small" id="userid">ID: ...</div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" id="createTab">Создать сделку</div>
+  <div class="tab" id="infoTab">Инструкция</div>
+</div>
+
+<section class="section active" id="createSection">
+  <div class="card">
+    <div class="field">
+      <label>Ваша роль в сделке</label>
+      <select id="role">
+        <option value="seller">♓️ Я продавец</option>
+        <option value="buyer">🆔 Я покупатель</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Ссылка на NFT / Gift</label>
+      <input id="nft" placeholder="https://t.me/nft/... или t.me/nft/...">
+    </div>
+
+    <div class="field">
+      <label>Сумма сделки</label>
+      <input id="amount" type="number" min="0.01" step="any" placeholder="Введите сумму">
+    </div>
+
+    <div class="field">
+      <label>Валюта</label>
+      <select id="currency">
+        <option value="RUB">RUB (₽)</option>
+        <option value="USDT">USDT ($)</option>
+        <option value="TON">TON (💎)</option>
+        <option value="Stars">Stars (⭐)</option>
+        <option value="UAH">UAH (₴)</option>
+        <option value="KZT">KZT (₸)</option>
+      </select>
+    </div>
+
+    <div id="sellerFields">
+      <div class="info">💡 Укажите реквизиты, куда вы хотите получить оплату.</div>
+      <div class="field">
+        <label>Способ получения оплаты</label>
+        <select id="method">
+          <option value="card">💳 Банковская карта</option>
+          <option value="ton">💎 TON Кошелёк</option>
+          <option value="stars">⭐ Telegram Stars</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Реквизиты продавца</label>
+        <input id="details" placeholder="Введите реквизиты">
+      </div>
+    </div>
+
+    <div class="info" id="buyerNotice" style="display:none">
+      Вы покупатель. После создания сделки вы получите реквизиты ОТС гаранта для оплаты
+    </div>
+
+    <button id="submit">✅ Создать сделку</button>
+
+    <div class="success" id="success">
+      <b style="color:#10b981">🎉 Сделка готова!</b>
+      <p style="font-size:13px;margin:6px 0">Нажмите кнопку ниже, чтобы открыть созданную сделку в боте и получить пригласительную ссылку:</p>
+      <button id="openBotBtn" style="background:#10b981">💬 Отправить сделку в бот</button>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="infoSection">
+  <div class="card">
+    <h3>🛡️ Порядок проведения сделки</h3>
+    <ol style="color:var(--hint);line-height:1.7;font-size:13px;padding-left:18px">
+      <li>Заполните форму выше.</li>
+      <li>Нажмите «Создать сделку».</li>
+      <li>Бот пришлёт подтверждение и пригласительную ссылку.</li>
+    </ol>
+  </div>
+</section>
+
 <button class="secondary" id="close">Закрыть приложение</button>
+
 <script>
-const tg=window.Telegram.WebApp;tg.ready();tg.expand();
-const $=x=>document.getElementById(x);const u=tg.initDataUnsafe&&tg.initDataUnsafe.user;if(u){$('name').textContent=(u.first_name||'')+(u.last_name?' '+u.last_name:'');$('userid').textContent='ID: '+u.id;$('avatar').textContent=(u.first_name||'?')[0].toUpperCase()}
-function setRole(){let seller=$('role').value==='seller';$('sellerFields').style.display=seller?'block':'none';$('buyerNotice').style.display=seller?'none':'block'}
-$('role').onchange=setRole;setRole();
-function tab(which){let create=which==='create';$('createTab').classList.toggle('active',create);$('infoTab').classList.toggle('active',!create);$('createSection').classList.toggle('active',create);$('infoSection').classList.toggle('active',!create)}$('createTab').onclick=()=>tab('create');$('infoTab').onclick=()=>tab('info');
-$('submit').onclick=()=>{let role=$('role').value,nft=$('nft').value.trim(),amount=Number($('amount').value),details=$('details').value.trim();if(!/^(https?:\/\/)?t\.me\//.test(nft))return tg.showAlert('Укажите корректную ссылку на NFT.');if(!amount||amount<=0)return tg.showAlert('Введите корректную сумму.');if(role==='seller'&&!details)return tg.showAlert('Укажите реквизиты продавца.');let payload={action:'create_deal',role,nfts:[nft],amount,currency:$('currency').value,payment_method:role==='seller'?$('method').value:null,payment_details:role==='seller'?details:null};if(!tg.sendData){return tg.showAlert('Откройте сайт через кнопку бота «🔮 Открыть приложение».')}tg.sendData(JSON.stringify(payload));$('submit').disabled=true;$('submit').textContent='⏳ Данные отправляются...';$('success').style.display='block'};
-$('close').onclick=()=>tg.close();
+const tg = window.Telegram.WebApp;
+tg.ready();
+tg.expand();
+
+const $ = id => document.getElementById(id);
+const user = tg.initDataUnsafe && tg.initDataUnsafe.user;
+
+if (user) {
+    $('name').textContent = (user.first_name || '') + (user.last_name ? ' ' + user.last_name : '');
+    $('userid').textContent = 'ID: ' + user.id;
+    $('avatar').textContent = (user.first_name || '?')[0].toUpperCase();
+}
+
+function setRole() {
+    let isSeller = $('role').value === 'seller';
+    $('sellerFields').style.display = isSeller ? 'block' : 'none';
+    $('buyerNotice').style.display = isSeller ? 'none' : 'block';
+}
+
+$('role').onchange = setRole;
+setRole();
+
+function tab(which) {
+    let create = which === 'create';
+    $('createTab').classList.toggle('active', create);
+    $('infoTab').classList.toggle('active', !create);
+    $('createSection').classList.toggle('active', create);
+    $('infoSection').classList.toggle('active', !create);
+}
+
+$('createTab').onclick = () => tab('create');
+$('infoTab').onclick = () => tab('info');
+
+let botStartUrl = "";
+
+$('submit').onclick = () => {
+    let role = $('role').value;
+    let nft = $('nft').value.trim();
+    let amount = Number($('amount').value);
+    let details = $('details').value.trim();
+    let currency = $('currency').value;
+    let method = $('method').value;
+
+    if (!/^(https?:\/\/)?t\.me\//.test(nft)) {
+        return tg.showAlert('Укажите корректную ссылку на NFT (например, t.me/nft/...)');
+    }
+    if (!amount || amount <= 0) {
+        return tg.showAlert('Введите корректную сумму сделки.');
+    }
+    if (role === 'seller' && !details) {
+        return tg.showAlert('Укажите реквизиты для получения оплаты!');
+    }
+
+    let cleanNft = nft.replace(/^https?:\/\//, '');
+    let payMethodParam = (role === 'seller') ? method : 'NONE';
+    let payDetailsParam = (role === 'seller') ? (details + '_') : '';
+    
+    let botUsername = "OtsGuarantBot";
+    botStartUrl = `https://t.me/${botUsername}?start=WEB_${role}_${amount}_${currency}_${payMethodParam}_${payDetailsParam}${cleanNft}`;
+
+    // Также пробуем вызывать sendData если открыто через ReplyKeyboard
+    try {
+        let payload = {
+            action: 'create_deal',
+            role: role,
+            nfts: [nft],
+            amount: amount,
+            currency: currency,
+            payment_method: role === 'seller' ? method : null,
+            payment_details: role === 'seller' ? details : null
+        };
+        tg.sendData(JSON.stringify(payload));
+    } catch(e) {}
+
+    $('submit').style.display = 'none';
+    $('success').style.display = 'block';
+
+    // Автоматически перенаправляем в бота
+    setTimeout(() => {
+        if (botStartUrl) tg.openTelegramLink(botStartUrl);
+    }, 400);
+};
+
+$('openBotBtn').onclick = () => {
+    if (botStartUrl) tg.openTelegramLink(botStartUrl);
+    tg.close();
+};
+
+$('close').onclick = () => tg.close();
 </script>
-</body></html>
+</body>
+</html>
