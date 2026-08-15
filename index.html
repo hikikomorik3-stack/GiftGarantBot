@@ -6,30 +6,229 @@
 <title>Gift Garant</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-:root{--bg:#090d16;--card:#131b2e;--text:#f1f5f9;--hint:#94a3b8;--accent:#6366f1;--border:#1e293b;--input:#0b1120;--ok:#10b981}
-*{box-sizing:border-box}
-body{margin:0;padding:16px;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,Roboto,sans-serif}
-.head{text-align:center;margin-bottom:12px}
-.head h1{margin:0;font-size:22px;color:#fff}
-.head p{color:var(--hint);font-size:13px;margin-top:4px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px}
-.row{display:flex;gap:12px;align-items:center}
-.avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#a855f7);display:grid;place-items:center;font-weight:bold;color:#fff}
-.small{font-size:12px;color:var(--hint);margin-top:2px}
-.tabs{display:flex;gap:8px;margin-bottom:16px}
-.tab{flex:1;text-align:center;padding:10px;border-radius:10px;background:var(--card);border:1px solid var(--border);color:var(--hint);cursor:pointer;font-size:13px}
-.tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
-.section{display:none}
-.section.active{display:block}
-.field{margin-bottom:14px}
-label{display:block;color:var(--hint);font-size:13px;margin-bottom:6px}
-input,select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--input);color:var(--text);font-size:14px;outline:none}
-button{width:100%;padding:14px;margin-top:8px;border:0;border-radius:12px;background:var(--accent);color:#fff;font-size:15px;font-weight:bold;cursor:pointer}
-button:active{transform:scale(.98)}
-.secondary{background:transparent;border:1px solid var(--border);color:var(--hint)}
-.info{padding:11px;border-left:4px solid var(--accent);background:#1e293d99;border-radius:6px;font-size:13px;line-height:1.4;margin-bottom:14px}
-.success{display:none;border:1px solid var(--ok);background:#10b98122;border-radius:12px;padding:14px;margin-top:14px}
-.link{padding:10px;background:var(--input);border:1px dashed var(--accent);border-radius:8px;word-break:break-all;color:#38bdf8;font-size:12px;margin:10px 0}
+:root {
+  --bg: #090d16;
+  --card: #131b2e;
+  --text: #f1f5f9;
+  --hint: #94a3b8;
+  --accent: #6366f1;
+  --border: #1e293b;
+  --input: #0b1120;
+  --ok: #10b981;
+  --warn: #f59e0b;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 16px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding-bottom: 30px;
+}
+.head {
+  text-align: center;
+  margin-bottom: 12px;
+}
+.head h1 {
+  margin: 0;
+  font-size: 22px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.head p {
+  color: var(--hint);
+  font-size: 13px;
+  margin-top: 4px;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  display: grid;
+  place-items: center;
+  font-weight: bold;
+  font-size: 18px;
+  color: #fff;
+}
+.small {
+  font-size: 12px;
+  color: var(--hint);
+  margin-top: 2px;
+}
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.tab {
+  text-align: center;
+  padding: 10px 4px;
+  border-radius: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--hint);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.section {
+  display: none;
+}
+.section.active {
+  display: block;
+}
+.field {
+  margin-bottom: 14px;
+}
+label {
+  display: block;
+  color: var(--hint);
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+input, select, textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--input);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+}
+button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+button:active {
+  transform: scale(0.98);
+}
+.secondary {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--hint);
+}
+.btn-green {
+  background: var(--ok);
+}
+.btn-warn {
+  background: var(--warn);
+}
+.info {
+  padding: 11px;
+  border-left: 4px solid var(--accent);
+  background: #1e293d99;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  margin-bottom: 14px;
+}
+.success {
+  display: none;
+  border: 1px solid var(--ok);
+  background: #10b98122;
+  border-radius: 12px;
+  padding: 14px;
+  margin-top: 14px;
+}
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: bold;
+}
+.badge-waiting { background: #3b82f633; color: #60a5fa; border: 1px solid #3b82f6; }
+.badge-process { background: #f59e0b33; color: #fbbf24; border: 1px solid #f59e0b; }
+.badge-completed { background: #10b98133; color: #34d399; border: 1px solid #10b981; }
+
+.deal-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+.deal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.deal-id {
+  font-weight: bold;
+  font-size: 14px;
+}
+.deal-body {
+  font-size: 13px;
+  color: var(--hint);
+  line-height: 1.5;
+}
+.code-block {
+  background: var(--input);
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 12px;
+  word-break: break-all;
+  color: #38bdf8;
+  margin: 6px 0;
+  border: 1px solid var(--border);
+}
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 100;
+  padding: 16px;
+  overflow-y: auto;
+}
+.modal.active {
+  display: block;
+}
+.modal-content {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  max-width: 500px;
+  margin: 20px auto;
+}
 </style>
 </head>
 <body>
@@ -50,11 +249,14 @@ button:active{transform:scale(.98)}
 </div>
 
 <div class="tabs">
-  <div class="tab active" id="createTab">Создать сделку</div>
-  <div class="tab" id="infoTab">Инструкция</div>
+  <div class="tab active" id="tabCreate">💜 Создать</div>
+  <div class="tab" id="tabDeals">☂️ Сделки</div>
+  <div class="tab" id="tabProfile">😈 Профиль</div>
+  <div class="tab" id="tabInfo">👾 Помощь</div>
 </div>
 
-<section class="section active" id="createSection">
+<!-- SECTION 1: CREATE DEAL -->
+<section class="section active" id="secCreate">
   <div class="card">
     <div class="field">
       <label>Ваша роль в сделке</label>
@@ -66,7 +268,7 @@ button:active{transform:scale(.98)}
 
     <div class="field">
       <label>Ссылка на NFT / Gift</label>
-      <input id="nft" placeholder="https://t.me/nft/... или t.me/nft/...">
+      <input id="nft" placeholder="t.me/nft/... или https://t.me/nft/...">
     </div>
 
     <div class="field">
@@ -103,31 +305,72 @@ button:active{transform:scale(.98)}
     </div>
 
     <div class="info" id="buyerNotice" style="display:none">
-      Вы покупатель. После создания сделки вы получите реквизиты ОТС гаранта для оплаты
+      Вы покупатель. После создания сделки вы получите реквизиты ОТС гаранта для оплаты.
     </div>
 
     <button id="submit">✅ Создать сделку</button>
 
     <div class="success" id="success">
-      <b style="color:#10b981">🎉 Сделка готова!</b>
-      <p style="font-size:13px;margin:6px 0">Нажмите кнопку ниже, чтобы открыть созданную сделку в боте и получить пригласительную ссылку:</p>
-      <button id="openBotBtn" style="background:#10b981">💬 Отправить сделку в бот</button>
+      <b style="color:#10b981">🎉 Сделка создана!</b>
+      <p style="font-size:13px;margin:6px 0">Нажмите кнопку ниже, чтобы перейти в бот и получить пригласительную ссылку:</p>
+      <button id="openBotBtn" class="btn-green">💬 Перейти в бот</button>
     </div>
   </div>
 </section>
 
-<section class="section" id="infoSection">
+<!-- SECTION 2: MY DEALS -->
+<section class="section" id="secDeals">
   <div class="card">
-    <h3>🛡️ Порядок проведения сделки</h3>
+    <h3 style="margin-top:0">☂️ Мои сделки</h3>
+    <div id="dealsList">
+      <p style="color:var(--hint);font-size:13px">У вас пока нет активных сделок.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 3: PROFILE -->
+<section class="section" id="secProfile">
+  <div class="card">
+    <h3 style="margin-top:0">😈 Профиль</h3>
+    <div class="info">
+      <div>Пользователь: <b id="profUsername">@user</b></div>
+      <div>ID: <code id="profId">00000000</code></div>
+      <div>Роль как продавец: <b id="profSellerCnt">0</b></div>
+      <div>Роль как покупатель: <b id="profBuyerCnt">0</b></div>
+      <div>Завершено сделок: <b id="profCompletedCnt">0</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 4: INFO / HELP -->
+<section class="section" id="secInfo">
+  <div class="card">
+    <h3 style="margin-top:0">👾 Инструкция сервиса</h3>
     <ol style="color:var(--hint);line-height:1.7;font-size:13px;padding-left:18px">
-      <li>Заполните форму выше.</li>
-      <li>Нажмите «Создать сделку».</li>
-      <li>Бот пришлёт подтверждение и пригласительную ссылку.</li>
+      <li>Заполните форму во вкладке «Создать».</li>
+      <li>Отправьте созданную сделку в бот и передайте пригласительную ссылку партнеру.</li>
+      <li>Покупатель производит оплату по указанным реквизитам.</li>
+      <li>Продавец передает NFT / подарок гаранту поддержки <b style="color:#fff">@OtsGuarantBot</b>.</li>
+      <li>После проверки и подтверждения сделка успешно завершается.</li>
     </ol>
   </div>
 </section>
 
-<button class="secondary" id="close">Закрыть приложение</button>
+<!-- MODAL: VIEW DEAL DETAILS -->
+<div class="modal" id="dealModal">
+  <div class="modal-content">
+    <div class="deal-header">
+      <h3 style="margin:0" id="mDealTitle">Сделка №</h3>
+      <span id="mDealStatus" class="badge">Статус</span>
+    </div>
+    <hr style="border:0;border-top:1px solid var(--border);margin:12px 0">
+    <div id="mDealBody" class="deal-body"></div>
+    <div id="mDealActions" style="margin-top:16px"></div>
+    <button class="secondary" id="mCloseBtn" style="margin-top:10px">Закрыть</button>
+  </div>
+</div>
+
+<button class="secondary" id="close" style="margin-top:20px">Закрыть приложение</button>
 
 <script>
 const tg = window.Telegram.WebApp;
@@ -138,85 +381,216 @@ const $ = id => document.getElementById(id);
 const user = tg.initDataUnsafe && tg.initDataUnsafe.user;
 
 if (user) {
-    $('name').textContent = (user.first_name || '') + (user.last_name ? ' ' + user.last_name : '');
-    $('userid').textContent = 'ID: ' + user.id;
-    $('avatar').textContent = (user.first_name || '?')[0].toUpperCase();
+  $('name').textContent = (user.first_name || '') + (user.last_name ? ' ' + user.last_name : '');
+  $('userid').textContent = 'ID: ' + user.id;
+  $('avatar').textContent = (user.first_name || '?')[0].toUpperCase();
+  $('profUsername').textContent = user.username ? '@' + user.username : (user.first_name || 'Пользователь');
+  $('profId').textContent = user.id;
+}
+
+function getLocalDeals() {
+  try {
+    return JSON.parse(localStorage.getItem('gg_deals') || '[]');
+  } catch(e) {
+    return [];
+  }
+}
+
+function saveLocalDeals(deals) {
+  localStorage.setItem('gg_deals', JSON.stringify(deals));
 }
 
 function setRole() {
-    let isSeller = $('role').value === 'seller';
-    $('sellerFields').style.display = isSeller ? 'block' : 'none';
-    $('buyerNotice').style.display = isSeller ? 'none' : 'block';
+  let isSeller = $('role').value === 'seller';
+  $('sellerFields').style.display = isSeller ? 'block' : 'none';
+  $('buyerNotice').style.display = isSeller ? 'none' : 'block';
 }
 
 $('role').onchange = setRole;
 setRole();
 
-function tab(which) {
-    let create = which === 'create';
-    $('createTab').classList.toggle('active', create);
-    $('infoTab').classList.toggle('active', !create);
-    $('createSection').classList.toggle('active', create);
-    $('infoSection').classList.toggle('active', !create);
+function tab(name) {
+  ['Create', 'Deals', 'Profile', 'Info'].forEach(t => {
+    $('tab' + t).classList.toggle('active', t === name);
+    $('sec' + t).classList.toggle('active', t === name);
+  });
+  if (name === 'Deals') renderDeals();
+  if (name === 'Profile') renderProfile();
 }
 
-$('createTab').onclick = () => tab('create');
-$('infoTab').onclick = () => tab('info');
+$('tabCreate').onclick = () => tab('Create');
+$('tabDeals').onclick = () => tab('Deals');
+$('tabProfile').onclick = () => tab('Profile');
+$('tabInfo').onclick = () => tab('Info');
 
-let botStartUrl = "";
+let currentBotUrl = "";
 
 $('submit').onclick = () => {
-    let role = $('role').value;
-    let nft = $('nft').value.trim();
-    let amount = Number($('amount').value);
-    let details = $('details').value.trim();
-    let currency = $('currency').value;
-    let method = $('method').value;
+  let role = $('role').value;
+  let nft = $('nft').value.trim();
+  let amount = Number($('amount').value);
+  let details = $('details').value.trim();
+  let currency = $('currency').value;
+  let method = $('method').value;
 
-    if (!/^(https?:\/\/)?t\.me\//.test(nft)) {
-        return tg.showAlert('Укажите корректную ссылку на NFT (например, t.me/nft/...)');
-    }
-    if (!amount || amount <= 0) {
-        return tg.showAlert('Введите корректную сумму сделки.');
-    }
-    if (role === 'seller' && !details) {
-        return tg.showAlert('Укажите реквизиты для получения оплаты!');
-    }
+  if (!/^(https?:\/\/)?t\.me\//.test(nft)) {
+    return tg.showAlert('Укажите корректную ссылку на NFT (например, t.me/nft/...)');
+  }
+  if (!amount || amount <= 0) {
+    return tg.showAlert('Введите корректную сумму сделки.');
+  }
+  if (role === 'seller' && !details) {
+    return tg.showAlert('Укажите реквизиты для получения оплаты!');
+  }
 
-    let cleanNft = nft.replace(/^https?:\/\//, '');
-    let payMethodParam = (role === 'seller') ? method : 'NONE';
-    let payDetailsParam = (role === 'seller') ? (details + '_') : '';
-    
-    let botUsername = "OtsGuarantBot";
-    botStartUrl = `https://t.me/${botUsername}?start=WEB_${role}_${amount}_${currency}_${payMethodParam}_${payDetailsParam}${cleanNft}`;
+  let cleanNft = nft.replace(/^https?:\/\//, '');
+  let payMethodParam = (role === 'seller') ? method : 'NONE';
+  let payDetailsParam = (role === 'seller') ? (details + '_') : '';
+  
+  let dealId = Math.random().toString(36).substring(2, 10).toUpperCase();
+  let botUsername = "OtsGuarantBot";
+  currentBotUrl = `https://t.me/${botUsername}?start=WEB_${role}_${amount}_${currency}_${payMethodParam}_${payDetailsParam}${cleanNft}`;
 
-    // Также пробуем вызывать sendData если открыто через ReplyKeyboard
-    try {
-        let payload = {
-            action: 'create_deal',
-            role: role,
-            nfts: [nft],
-            amount: amount,
-            currency: currency,
-            payment_method: role === 'seller' ? method : null,
-            payment_details: role === 'seller' ? details : null
-        };
-        tg.sendData(JSON.stringify(payload));
-    } catch(e) {}
+  let deals = getLocalDeals();
+  deals.unshift({
+    id: dealId,
+    role: role,
+    nft: nft,
+    amount: amount,
+    currency: currency,
+    payMethod: method,
+    payDetails: details,
+    status: 'waiting',
+    createdAt: new Date().toLocaleDateString()
+  });
+  saveLocalDeals(deals);
 
-    $('submit').style.display = 'none';
-    $('success').style.display = 'block';
+  try {
+    let payload = {
+      action: 'create_deal',
+      role: role,
+      nfts: [nft],
+      amount: amount,
+      currency: currency,
+      payment_method: role === 'seller' ? method : null,
+      payment_details: role === 'seller' ? details : null
+    };
+    tg.sendData(JSON.stringify(payload));
+  } catch(e) {}
 
-    // Автоматически перенаправляем в бота
-    setTimeout(() => {
-        if (botStartUrl) tg.openTelegramLink(botStartUrl);
-    }, 400);
+  $('submit').style.display = 'none';
+  $('success').style.display = 'block';
+
+  setTimeout(() => {
+    if (currentBotUrl) tg.openTelegramLink(currentBotUrl);
+  }, 400);
 };
 
 $('openBotBtn').onclick = () => {
-    if (botStartUrl) tg.openTelegramLink(botStartUrl);
-    tg.close();
+  if (currentBotUrl) tg.openTelegramLink(currentBotUrl);
+  tg.close();
 };
+
+function renderDeals() {
+  let deals = getLocalDeals();
+  let container = $('dealsList');
+  if (deals.length === 0) {
+    container.innerHTML = '<p style="color:var(--hint);font-size:13px">Сделок пока нет. Создайте новую в разделе «💜 Создать».</p>';
+    return;
+  }
+
+  container.innerHTML = '';
+  deals.forEach((d, idx) => {
+    let badgeClass = d.status === 'waiting' ? 'badge-waiting' : (d.status === 'process' ? 'badge-process' : 'badge-completed');
+    let statusLabel = d.status === 'waiting' ? '⏳ Ожидание' : (d.status === 'process' ? '⚙️ В процессе' : '✅ Завершена');
+    let roleLabel = d.role === 'seller' ? 'Продавец' : 'Покупатель';
+
+    let el = document.createElement('div');
+    el.className = 'deal-item';
+    el.innerHTML = `
+      <div class="deal-header">
+        <span class="deal-id">Сделка №${d.id}</span>
+        <span class="badge ${badgeClass}">${statusLabel}</span>
+      </div>
+      <div class="deal-body">
+        <div>Роль: <b>${roleLabel}</b></div>
+        <div>Сумма: <b>${d.amount} ${d.currency}</b></div>
+        <div>NFT: <code>${d.nft}</code></div>
+      </div>
+    `;
+    el.onclick = () => openDealModal(idx);
+    container.appendChild(el);
+  });
+}
+
+function openDealModal(idx) {
+  let deals = getLocalDeals();
+  let d = deals[idx];
+  if (!d) return;
+
+  $('mDealTitle').textContent = `Сделка №${d.id}`;
+  
+  let badgeClass = d.status === 'waiting' ? 'badge-waiting' : (d.status === 'process' ? 'badge-process' : 'badge-completed');
+  let statusLabel = d.status === 'waiting' ? '⏳ Ожидание партнера' : (d.status === 'process' ? '⚙️ В процессе' : '✅ Завершена');
+  $('mDealStatus').className = `badge ${badgeClass}`;
+  $('mDealStatus').textContent = statusLabel;
+
+  let inviteLink = `https://t.me/OtsGuarantBot?start=${d.id}_${user ? user.id : '0'}`;
+  let roleLabel = d.role === 'seller' ? 'Продавец' : 'Покупатель';
+
+  let bodyHtml = `
+    <div><b>Роль:</b> ${roleLabel}</div>
+    <div><b>NFT / Gift:</b> <code>${d.nft}</code></div>
+    <div><b>Сумма:</b> ${d.amount} ${d.currency}</div>
+  `;
+
+  if (d.payDetails) {
+    bodyHtml += `
+      <div style="margin-top:8px"><b>Реквизиты продавца:</b></div>
+      <div class="code-block">${d.payDetails}</div>
+    `;
+  }
+
+  bodyHtml += `
+    <div style="margin-top:8px"><b>Пригласительная ссылка:</b></div>
+    <div class="code-block">${inviteLink}</div>
+  `;
+
+  $('mDealBody').innerHTML = bodyHtml;
+
+  let actionsHtml = '';
+  if (d.status === 'waiting') {
+    actionsHtml += `<button onclick="updateDealStatus(${idx}, 'process')" class="btn-green">⚙️ Перевести в процесс</button>`;
+  } else if (d.status === 'process') {
+    actionsHtml += `<button onclick="updateDealStatus(${idx}, 'completed')" class="btn-green">✅ Подтвердить и завершить</button>`;
+  }
+  
+  $('mDealActions').innerHTML = actionsHtml;
+  $('dealModal').classList.add('active');
+}
+
+function updateDealStatus(idx, newStatus) {
+  let deals = getLocalDeals();
+  if (deals[idx]) {
+    deals[idx].status = newStatus;
+    saveLocalDeals(deals);
+    renderDeals();
+    $('dealModal').classList.remove('active');
+  }
+}
+
+$('mCloseBtn').onclick = () => $('dealModal').classList.remove('active');
+
+function renderProfile() {
+  let deals = getLocalDeals();
+  let sellerCnt = deals.filter(d => d.role === 'seller').length;
+  let buyerCnt = deals.filter(d => d.role === 'buyer').length;
+  let completedCnt = deals.filter(d => d.status === 'completed').length;
+
+  $('profSellerCnt').textContent = sellerCnt;
+  $('profBuyerCnt').textContent = buyerCnt;
+  $('profCompletedCnt').textContent = completedCnt;
+}
 
 $('close').onclick = () => tg.close();
 </script>
