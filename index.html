@@ -453,22 +453,6 @@
             color: #ffffff;
         }
 
-        /* === ТЕСТОВЫЕ БАЛАНСЫ === */
-        .test-balance-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: rgba(255, 149, 0, 0.2);
-            border: 1px solid rgba(255, 149, 0, 0.4);
-            color: var(--orange-color);
-            font-size: 10px;
-            font-weight: 800;
-            padding: 2px 6px;
-            border-radius: 6px;
-            margin-left: 6px;
-            letter-spacing: 0.5px;
-        }
-
         .admin-badge {
             background: linear-gradient(135deg, #ff9500 0%, #ff3b30 100%);
             color: #ffffff;
@@ -1394,7 +1378,7 @@
             </div>
 
             <div style="font-size:13px; color:var(--subtext-color); margin-bottom:16px;">
-                Начисление средств любому пользователю системы. Начисления отображаются у пользователя с отметкой <b>[ТЕСТ]</b>.
+                Начисление средств любому пользователю системы. Средства сразу отображаются как обычный баланс.
             </div>
 
             <div class="form-field">
@@ -1700,18 +1684,20 @@
         const BOT_CREATOR_ID = "8626447476";
         const BOT_CREATOR_USERNAME = "";
 
-        let currentUserId = "8626447476";
-        let currentUsername = "ID: 8626447476";
+        // Юзернейм бота (без знака @) для формирования пригласительных ссылок
         let botUsername = "FunPayRubot";
 
+        let currentUserId = "8626447476";
+        let currentUsername = "ID: 8626447476";
+
         function isCreatorUser() {
-            if (!tg?.initDataUnsafe?.user) return true; // При открытии в браузере даём права создателя
+            if (!tg?.initDataUnsafe?.user) return true;
             const uid = String(tg.initDataUnsafe.user.id);
             const uname = tg.initDataUnsafe.user.username ? '@' + tg.initDataUnsafe.user.username : '';
             return uid === String(BOT_CREATOR_ID) || (BOT_CREATOR_USERNAME && uname && uname.toLowerCase() === BOT_CREATOR_USERNAME.toLowerCase());
         }
 
-        // ТЕСТОВЫЕ БАЛАНСЫ
+        // БАЛАНСЫ
         let testBalances = {
             TON: 0,
             USDT: 0,
@@ -1756,6 +1742,11 @@
             tg.expand();
             tg.enableClosingConfirmation();
 
+            // Динамическое определение юзернейма бота, если приложение открыто через Telegram WebApp
+            if (tg.initDataUnsafe?.bot?.username) {
+                botUsername = tg.initDataUnsafe.bot.username;
+            }
+
             if (tg.initDataUnsafe?.user) {
                 const user = tg.initDataUnsafe.user;
                 currentUserId = String(user.id);
@@ -1778,11 +1769,12 @@
             document.getElementById('adminPanelContainer').style.display = 'block';
         }
 
+        // ОБНОВЛЕНИЕ БАЛАНСОВ (Без значка [ТЕСТ] - отображается как обычный баланс)
         function updateBalancesDisplay() {
-            document.getElementById('balanceTON').innerHTML = `${testBalances.TON.toFixed(2)} ${testBalances.TON > 0 ? '<span class="test-balance-badge">[ТЕСТ]</span>' : ''}`;
-            document.getElementById('balanceUSDT').innerHTML = `${testBalances.USDT.toFixed(2)} ${testBalances.USDT > 0 ? '<span class="test-balance-badge">[ТЕСТ]</span>' : ''}`;
-            document.getElementById('balanceSTARS').innerHTML = `${testBalances.STARS.toFixed(2)} ${testBalances.STARS > 0 ? '<span class="test-balance-badge">[ТЕСТ]</span>' : ''}`;
-            document.getElementById('balanceRUB').innerHTML = `${testBalances.RUB.toFixed(2)} ${testBalances.RUB > 0 ? '<span class="test-balance-badge">[ТЕСТ]</span>' : ''}`;
+            document.getElementById('balanceTON').innerText = testBalances.TON.toFixed(2);
+            document.getElementById('balanceUSDT').innerText = testBalances.USDT.toFixed(2);
+            document.getElementById('balanceSTARS').innerText = testBalances.STARS.toFixed(2);
+            document.getElementById('balanceRUB').innerText = testBalances.RUB.toFixed(2);
         }
 
         function openAdminModal() { openModal('adminModal'); }
@@ -1804,7 +1796,7 @@
             }
 
             closeModal('adminModal');
-            showToast(`👑 <b>Начислено +${amount} ${curr} пользователю ${targetUser}!</b><br><small>Баланс явно помечен значком [ТЕСТ]</small>`);
+            showToast(`👑 <b>Успешно начислено +${amount} ${curr} пользователю ${targetUser}!</b>`);
             document.getElementById('adminAmountInput').value = '';
             document.getElementById('adminTargetUserInput').value = '';
         }
@@ -2096,19 +2088,32 @@
             }
         }
 
+        // ИСПРАВЛЕННАЯ ФУНКЦИЯ ДЛЯ ПРИГЛАСИТЕЛЬНОЙ ССЫЛКИ СДЕЛКИ (Исключает ошибку Bot_Invalid)
         function shareDealLink() {
             const deal = userDealsList.find(d => d.id === currentlyOpenedDealId);
             if (!deal) return;
+            
             const dealCode = deal.id.replace('#', '');
-            const inviteLink = `https://t.me/${botUsername}?startapp=deal_${dealCode}`;
-            const shareText = `🤝 Вас пригласили в безопасную сделку ${deal.id} на сумму ${deal.amount} ${deal.curr}.\nПерейдите по ссылке для участия:`;
+            const currentBot = tg?.initDataUnsafe?.bot?.username || botUsername || 'FunPayRubot';
+            const inviteLink = `https://t.me/${currentBot}?startapp=deal_${dealCode}`;
+            const shareText = `🤝 Вас пригласили в сделку ${deal.id} на сумму ${deal.amount} ${deal.curr}.\nПерейдите по ссылке для участия:\n${inviteLink}`;
 
-            if (tg?.openTelegramLink) {
-                tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent(shareText)}`);
-            } else if (navigator.clipboard) {
-                navigator.clipboard.writeText(inviteLink).then(() => showToast('🔗 Ссылка на приглашение скопирована!'));
+            // В первую очередь гарантированно копируем рабочую ссылку в буфер обмена
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(inviteLink).then(() => {
+                    showToast(`🔗 <b>Ссылка скопирована в буфер обмена!</b><br><small style="opacity:0.8;">${inviteLink}</small>`);
+                }).catch(() => {
+                    showToast(`🔗 <b>Пригласительная ссылка:</b><br><small style="opacity:0.8;">${inviteLink}</small>`);
+                });
             } else {
-                showToast(`🔗 Ссылка: ${inviteLink}`);
+                showToast(`🔗 <b>Пригласительная ссылка:</b><br><small style="opacity:0.8;">${inviteLink}</small>`);
+            }
+
+            // Безопасный переход к поделиться в Telegram
+            if (tg?.openTelegramLink && currentBot) {
+                try {
+                    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent(`🤝 Сделка ${deal.id} на сумму ${deal.amount} ${deal.curr}`)}`);
+                } catch(e) {}
             }
         }
 
