@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FunPay / Trade</title>
+    <title>FunPay / Trade Escrow</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -17,6 +17,8 @@
             --bottom-nav-bg: #1c1c1e;
             --red-color: #ff3b30;
             --green-color: #34c759;
+            --orange-color: #ff9500;
+            --purple-color: #af52de;
             --border-radius-lg: 20px;
             --border-radius-md: 14px;
             --border-radius-sm: 10px;
@@ -67,7 +69,7 @@
             letter-spacing: -0.5px;
         }
 
-        /* === ИДЕАЛЬНАЯ КАРУСЕЛЬ БАННЕРОВ БЕЗ ЗАЗОРОВ И ПОЛЕЙ === */
+        /* === БАННЕРЫ === */
         .carousel-container {
             position: relative;
             width: 100%;
@@ -91,14 +93,14 @@
             justify-content: center;
             box-sizing: border-box;
             overflow: hidden;
-            aspect-ratio: 16 / 7; /* Идеальная пропорция баннера для мобильных WebApp */
+            aspect-ratio: 16 / 7;
         }
 
         .carousel-slide img {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Полное заполнение без рамок, обрезка лишнего по краям */
-            object-position: center; /* Строго по центру */
+            object-fit: cover;
+            object-position: center;
             display: block;
             border: none;
             outline: none;
@@ -127,7 +129,7 @@
             border-radius: 4px;
         }
 
-        /* === КНОПКИ РАЗДЕЛА "МОИ СДЕЛКИ" === */
+        /* === КНОПКИ ДЕЙСТВИЙ === */
         .section-title {
             font-size: 28px;
             font-weight: 800;
@@ -162,6 +164,7 @@
         .btn-blue-solid { background-color: #007aff; color: #ffffff; }
         .btn-gray-solid { background-color: #2c2c2e; color: #ffffff; }
         .btn-white-solid { background-color: #ffffff; color: #000000; }
+        .btn-purple-solid { background-color: var(--purple-color); color: #ffffff; }
 
         .btn-icon-svg { width: 20px; height: 20px; fill: currentColor; }
 
@@ -175,7 +178,7 @@
             letter-spacing: -0.2px;
         }
 
-        /* === КАРТОЧКА СДЕЛКИ В ЛЕНТЕ === */
+        /* === КАРТОЧКА СДЕЛКИ === */
         .deal-card-preview {
             background-color: var(--card-bg);
             border-radius: var(--border-radius-lg);
@@ -183,6 +186,12 @@
             margin-bottom: 16px;
             border: 1px solid rgba(255, 255, 255, 0.08);
             cursor: pointer;
+            position: relative;
+            transition: border-color 0.2s;
+        }
+
+        .deal-card-preview:hover {
+            border-color: rgba(0, 122, 255, 0.4);
         }
 
         .deal-card-header {
@@ -192,7 +201,7 @@
             margin-bottom: 12px;
         }
 
-        .deal-card-id { font-size: 18px; font-weight: 800; }
+        .deal-card-id { font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
 
         .deal-card-status-badge {
             font-size: 12px;
@@ -202,6 +211,21 @@
             border-radius: 14px;
             font-weight: 600;
         }
+
+        .deal-card-status-badge.status-created { background: rgba(0, 122, 255, 0.15); color: var(--accent-blue); }
+        .deal-card-status-badge.status-waiting { background: rgba(255, 149, 0, 0.15); color: var(--orange-color); }
+        .deal-card-status-badge.status-escrow { background: rgba(175, 82, 222, 0.15); color: var(--purple-color); }
+        .deal-card-status-badge.status-completed { background: rgba(52, 199, 89, 0.15); color: var(--green-color); }
+
+        .role-pill {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .role-pill.seller { background: rgba(52, 199, 89, 0.2); color: var(--green-color); }
+        .role-pill.buyer { background: rgba(0, 122, 255, 0.2); color: var(--accent-blue); }
 
         .deal-card-amount-row {
             display: flex;
@@ -232,6 +256,17 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+        }
+
+        .deal-card-participants-row {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: var(--subtext-color);
+            margin-bottom: 10px;
+            background: rgba(0,0,0,0.2);
+            padding: 8px 12px;
+            border-radius: var(--border-radius-sm);
         }
 
         .deal-card-date-pill {
@@ -304,7 +339,7 @@
         .step-dot-label {
             font-size: 10px;
             color: #66666a;
-            padding: 3px 8px;
+            padding: 3px 6px;
             border-radius: 10px;
             font-weight: 600;
         }
@@ -315,7 +350,7 @@
             color: var(--green-color);
         }
 
-        /* === ВКЛАДКА 2: КОШЕЛЬКИ === */
+        /* === КОШЕЛЬКИ И БАЛАНСЫ === */
         .currency-scroll {
             display: flex;
             gap: 10px;
@@ -355,6 +390,7 @@
             font-weight: 800;
         }
 
+        .chip-ton { background-color: #0a84ff; color: #fff; }
         .chip-stars { background-color: #ffcc00; color: #000; }
         .chip-rub { background-color: #007aff; color: #fff; }
         .chip-usd { background-color: #34c759; color: #fff; }
@@ -417,7 +453,65 @@
             color: #ffffff;
         }
 
-        /* === ВКЛАДКА 3: ЛИДЕРЫ === */
+        /* === ТЕСТОВЫЕ БАЛАНСЫ === */
+        .test-balance-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 149, 0, 0.2);
+            border: 1px solid rgba(255, 149, 0, 0.4);
+            color: var(--orange-color);
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 6px;
+            margin-left: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .admin-badge {
+            background: linear-gradient(135deg, #ff9500 0%, #ff3b30 100%);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 8px;
+        }
+
+        /* КНОПКИ БЫСТРЫХ ШАБЛОНОВ "ПОДАРОК" И "АККАУНТ" */
+        .gift-presets-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-gift-preset {
+            flex: 1;
+            background: rgba(0, 122, 255, 0.15);
+            border: 1px solid rgba(0, 122, 255, 0.35);
+            color: var(--accent-blue);
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-gift-preset:active {
+            transform: scale(0.96);
+            background: rgba(0, 122, 255, 0.3);
+        }
+
+        /* === ЛИДЕРЫ === */
         .leaders-top-art {
             text-align: center;
             margin: 10px 0 20px 0;
@@ -545,7 +639,7 @@
             font-weight: 700;
         }
 
-        /* === ВКЛАДКА 4: ПРОФИЛЬ === */
+        /* === ПРОФИЛЬ === */
         .profile-top-header {
             display: flex;
             justify-content: space-between;
@@ -598,7 +692,7 @@
             margin-bottom: 14px;
         }
 
-        .profile-display-name { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+        .profile-display-name { font-size: 24px; font-weight: 800; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
         .profile-handle { font-size: 15px; color: var(--subtext-color); font-weight: 500; }
 
         .profile-dual-buttons {
@@ -713,7 +807,7 @@
         .coin-rub { background-color: #007aff; }
 
         .coin-symbol-name { font-size: 16px; font-weight: 800; }
-        .coin-value-blue { font-size: 16px; font-weight: 700; color: var(--accent-blue); }
+        .coin-value-blue { font-size: 16px; font-weight: 700; color: var(--accent-blue); display: flex; align-items: center; }
 
         .stats-section-card {
             background-color: var(--card-bg);
@@ -750,12 +844,12 @@
         }
 
         .turnover-label { font-size: 14px; color: var(--subtext-color); margin-bottom: 6px; font-weight: 500; }
-        .turnover-val { font-size: 24px; font-900; color: var(--accent-blue); }
+        .turnover-val { font-size: 24px; font-weight: 900; color: var(--accent-blue); }
 
         .rates-list-vertical { display: flex; flex-direction: column; gap: 10px; }
         .rate-item-row { background-color: #28282b; border-radius: var(--border-radius-md); padding: 16px; display: flex; align-items: center; justify-content: space-between; }
 
-        /* === ИНТЕРАКТИВНЫЕ ВСПЛЫВАЮЩИЕ УВЕДОМЛЕНИЯ ВНУТРИ ПРИЛОЖЕНИЯ === */
+        /* === УВЕДОМЛЕНИЯ === */
         .toast-notification {
             position: fixed;
             top: 20px;
@@ -808,6 +902,33 @@
         .modal-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .modal-close-btn { background: var(--inner-card-bg); border: none; color: var(--text-color); width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .modal-title { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+
+        /* ВЫБОР РОЛИ */
+        .role-selector-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .role-card-option {
+            background-color: var(--inner-card-bg);
+            border: 2px solid transparent;
+            border-radius: var(--border-radius-md);
+            padding: 16px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .role-card-option.selected {
+            border-color: var(--accent-blue);
+            background-color: rgba(0, 122, 255, 0.12);
+        }
+
+        .role-card-option .role-icon { font-size: 28px; margin-bottom: 6px; }
+        .role-card-option .role-title { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+        .role-card-option .role-desc { font-size: 12px; color: var(--subtext-color); }
 
         .lang-option-box {
             background-color: #28282b;
@@ -931,7 +1052,7 @@
             stroke-linejoin: round;
         }
 
-        /* ================= LIGHT THEME OVERRIDES ================= */
+        /* LIGHT THEME OVERRIDES */
         body[data-theme="light"] {
             --bg-color: #ffffff;
             --card-bg: #f2f2f7;
@@ -963,6 +1084,7 @@
         body[data-theme="light"] .balance-item-row,
         body[data-theme="light"] .rule-box,
         body[data-theme="light"] .deal-summary-box,
+        body[data-theme="light"] .role-card-option,
         body[data-theme="light"] .lang-option-box { background-color: #e5e5ea; }
         body[data-theme="light"] .wallet-label-left { color: #6e6e73; }
         body[data-theme="light"] .wallet-inner-val { color: #111114; }
@@ -1089,8 +1211,9 @@
             <div class="screen-header"><h1 data-i18n="nav_wallets">Мои кошельки</h1></div>
             
             <div class="currency-scroll" id="currencyScroll">
+                <div class="currency-chip active" data-currency="TON" onclick="selectCurrency('TON')"><div class="chip-icon-circle chip-ton">🔷</div>TON</div>
                 <div class="currency-chip" data-currency="STARS" onclick="selectCurrency('STARS')"><div class="chip-icon-circle chip-stars">★</div>STARS</div>
-                <div class="currency-chip active" data-currency="RUB" onclick="selectCurrency('RUB')"><div class="chip-icon-circle chip-rub">₽</div>RUB</div>
+                <div class="currency-chip" data-currency="RUB" onclick="selectCurrency('RUB')"><div class="chip-icon-circle chip-rub">₽</div>RUB</div>
                 <div class="currency-chip" data-currency="USD" onclick="selectCurrency('USD')"><div class="chip-icon-circle chip-usd">$</div>USD</div>
                 <div class="currency-chip" data-currency="EUR" onclick="selectCurrency('EUR')"><div class="chip-icon-circle chip-eur">€</div>EUR</div>
             </div>
@@ -1101,13 +1224,13 @@
                     <div class="wallet-inner-top">
                         <div class="wallet-label-left">
                             <svg style="width:20px; height:20px; fill:currentColor;" viewBox="0 0 24 24"><path d="M20 4H4C2.89 4 2 4.89 2 6V18C2 19.11 2.89 20 4 20H20C21.11 20 22 19.11 22 18V6C22 4.89 21.11 4 20 4ZM20 18H4V12H20V18ZM20 8H4V6H20V8Z"/></svg>
-                            <span id="cardLabel">Банковская карта для RUB</span>
+                            <span id="cardLabel">Кошелёк TON (Tonkeeper / Wallet)</span>
                         </div>
                         <button class="edit-pencil-btn" onclick="editDetails()">
                             <svg style="width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2;" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"></path></svg>
                         </button>
                     </div>
-                    <div class="wallet-inner-val" id="cardDetails" data-i18n="not_specified">Не указана</div>
+                    <div class="wallet-inner-val" id="cardDetails" data-i18n="not_specified">Не указан</div>
                 </div>
             </div>
 
@@ -1182,8 +1305,10 @@
 
             <div class="profile-user-center">
                 <img class="profile-avatar-circle" id="userAvatar" src="https://unlimbot.hb.ru-msk.vkcloud-storage.ru/uploads/8460576d754943a8bb53603161a612cb2586a0648849c49b.jpg" alt="Avatar">
-                <div class="profile-display-name" id="profileName">лерочка</div>
-                <div class="profile-handle" id="profileUsername">@hdjsosw</div>
+                <div class="profile-display-name" id="profileName">
+                    Владелец
+                </div>
+                <div class="profile-handle" id="profileUsername">ID: 8626447476</div>
             </div>
 
             <div class="profile-dual-buttons">
@@ -1192,6 +1317,13 @@
                 </button>
                 <button class="profile-btn profile-btn-grey" onclick="openLanguagesModal()">
                     🌐 <span data-i18n="btn_languages">Языки</span>
+                </button>
+            </div>
+
+            <!-- АДМИН-КНОПКА (Отображается ТОЛЬКО для СОЗДАТЕЛЯ) -->
+            <div id="adminPanelContainer" style="display:none; margin-bottom: 20px;">
+                <button class="btn-action btn-purple-solid" onclick="openAdminModal()">
+                    👑 <span>Админ-панель создателя</span>
                 </button>
             </div>
 
@@ -1227,14 +1359,14 @@
             <div class="stats-section-card">
                 <div class="stats-section-title">Статистика сделок</div>
                 <div class="stats-grid-2x2">
-                    <div class="stat-small-box"><div class="stat-small-label">Успешных</div><div class="stat-small-val">0</div></div>
-                    <div class="stat-small-box"><div class="stat-small-label">Завершённых</div><div class="stat-small-val">0</div></div>
-                    <div class="stat-small-box"><div class="stat-small-label">Отменённых</div><div class="stat-small-val" id="statCancelled">1</div></div>
-                    <div class="stat-small-box"><div class="stat-small-label">Всего</div><div class="stat-small-val" id="statTotal">1</div></div>
+                    <div class="stat-small-box"><div class="stat-small-label">Успешных</div><div class="stat-small-val" id="statSuccess">0</div></div>
+                    <div class="stat-small-box"><div class="stat-small-label">Завершённых</div><div class="stat-small-val" id="statCompleted">0</div></div>
+                    <div class="stat-small-box"><div class="stat-small-label">Отменённых</div><div class="stat-small-val" id="statCancelled">0</div></div>
+                    <div class="stat-small-box"><div class="stat-small-label">Всего</div><div class="stat-small-val" id="statTotal">0</div></div>
                 </div>
                 <div class="turnover-banner-box">
                     <div class="turnover-label">Торговый оборот</div>
-                    <div class="turnover-val">0,00 $</div>
+                    <div class="turnover-val" id="turnoverAmount">0,00 $</div>
                 </div>
             </div>
 
@@ -1252,6 +1384,42 @@
 
 
     <!-- ================= МОДАЛЬНЫЕ ОКНА ================= -->
+
+    <!-- Модалка: Админ Тест-Баланс (Только для создателя) -->
+    <div id="adminModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header-row">
+                <div class="modal-title" style="margin-bottom:0; font-size:20px;">👑 Панель создателя бота</div>
+                <button class="modal-close-btn" onclick="closeModal('adminModal')">✕</button>
+            </div>
+
+            <div style="font-size:13px; color:var(--subtext-color); margin-bottom:16px;">
+                Начисление средств любому пользователю системы. Начисления отображаются у пользователя с отметкой <b>[ТЕСТ]</b>.
+            </div>
+
+            <div class="form-field">
+                <label>Пользователь (Username или Telegram ID)</label>
+                <input type="text" class="form-control-input" id="adminTargetUserInput" placeholder="Например: 8626447476 или @username (пусто = себе)">
+            </div>
+
+            <div class="form-field">
+                <label>Выберите валюту</label>
+                <select class="form-control-select" id="adminCurrencySelect">
+                    <option value="TON">TON 🔷</option>
+                    <option value="USDT">USDT ₮</option>
+                    <option value="STARS">STARS ★</option>
+                    <option value="RUB" selected>RUB (₽)</option>
+                </select>
+            </div>
+
+            <div class="form-field">
+                <label>Сумма начисления</label>
+                <input type="number" class="form-control-input" id="adminAmountInput" placeholder="Например: 5000">
+            </div>
+
+            <button class="btn-submit" onclick="submitAdminCredit()" style="background-color:var(--purple-color);">Начислить средства пользователю</button>
+        </div>
+    </div>
 
     <!-- Модалка: Выбор языка -->
     <div id="languagesModal" class="modal-overlay">
@@ -1303,40 +1471,57 @@
                 <button class="modal-close-btn" onclick="closeModal('createModal')">✕</button>
             </div>
 
+            <div style="font-size:13px; color:var(--subtext-color); margin-bottom:10px; font-weight:600;">Выберите вашу роль в сделке:</div>
+            <div class="role-selector-grid">
+                <div class="role-card-option selected" id="roleOptionSeller" onclick="selectCreationRole('seller')">
+                    <div class="role-icon">🏷️</div>
+                    <div class="role-title">Продавец</div>
+                    <div class="role-desc">Передаю товар / подарок</div>
+                </div>
+                <div class="role-card-option" id="roleOptionBuyer" onclick="selectCreationRole('buyer')">
+                    <div class="role-icon">🛒</div>
+                    <div class="role-title">Покупатель</div>
+                    <div class="role-desc">Оплачиваю сделку</div>
+                </div>
+            </div>
+
             <div class="deal-summary-box">
-                <div class="summary-row"><span data-i18n="type_label">Тип:</span><span id="previewType">Продажа</span></div>
+                <div class="summary-row"><span>Ваша роль:</span><span id="previewRoleText" style="color:var(--green-color); font-weight:800;">Продавец</span></div>
                 <div class="summary-row"><span data-i18n="amount_label">Сумма:</span><span id="previewSum">0 RUB</span></div>
                 <div class="summary-row"><span data-i18n="desc_label">Описание:</span><span id="previewDesc" style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">—</span></div>
             </div>
 
             <div class="form-field">
-                <label data-i18n="type_label">Тип сделки</label>
-                <select class="form-control-select" id="dealTypeInput" onchange="updateDealPreview()">
-                    <option value="Продажа" data-i18n="sell_option">Продажа</option>
-                    <option value="Покупка" data-i18n="buy_option">Покупка</option>
-                </select>
-            </div>
-
-            <div class="form-field">
-                <label data-i18n="amount_label">Сумма</label>
+                <label data-i18n="amount_label">Сумма сделки</label>
                 <input type="number" class="form-control-input" id="dealAmountInput" placeholder="Введите сумму" oninput="updateDealPreview()">
             </div>
 
             <div class="form-field">
                 <label data-i18n="currency_label">Валюта</label>
                 <select class="form-control-select" id="dealCurrencyInput" onchange="updateDealPreview()">
+                    <option value="TON">TON (🔷)</option>
                     <option value="Stars (⭐)">Stars (⭐)</option>
                     <option value="RUB (₽)" selected>RUB (₽)</option>
                     <option value="USD ($)">USD ($)</option>
                     <option value="EUR (€)">EUR (€)</option>
-                    <option value="TON">TON</option>
                     <option value="USDT">USDT</option>
                 </select>
             </div>
 
             <div class="form-field">
-                <label data-i18n="desc_label">Описание / Ссылка</label>
-                <textarea class="form-control-textarea" id="dealDescInput" placeholder="Введите ссылку или описание товара" oninput="updateDealPreview()"></textarea>
+                <label data-i18n="desc_label">Описание / Ссылка на товар</label>
+                
+                <!-- 2 КНОПКИ: "Подарок" И "Аккаунт" -->
+                <div class="gift-presets-row">
+                    <button type="button" class="btn-gift-preset" onclick="setGiftPreset('🎁 Подарок')">
+                        🎁 Подарок
+                    </button>
+                    <button type="button" class="btn-gift-preset" onclick="setGiftPreset('👤 Аккаунт')">
+                        👤 Аккаунт
+                    </button>
+                </div>
+
+                <textarea class="form-control-textarea" id="dealDescInput" placeholder="Введите ссылку или описание товара/подарка" oninput="updateDealPreview()"></textarea>
             </div>
 
             <button class="btn-submit" onclick="submitCreateDeal()" data-i18n="btn_create_deal">Создать сделку</button>
@@ -1351,21 +1536,24 @@
                 <button class="modal-close-btn" onclick="closeModal('dealDetailsModal')">✕</button>
             </div>
 
-            <div style="font-size:22px; font-weight:800; margin-bottom:14px;" id="modalDealId">#000000</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                <div style="font-size:22px; font-weight:800;" id="modalDealId">#000000</div>
+                <div id="modalMyRoleBadge" class="role-pill seller">Вы: Продавец</div>
+            </div>
 
             <div style="background:#28282b; border-radius:16px; padding:18px; margin-bottom:16px;">
                 <div style="font-size:12px; color:var(--subtext-color); font-weight:800; margin-bottom:6px;" data-i18n="deal_status_header">СТАТУС СДЕЛКИ</div>
-                <div style="font-size:18px; font-weight:800; margin-bottom:12px;" id="stepTitleText">Шаг 1 из 5 — Создана</div>
+                <div style="font-size:17px; font-weight:800; margin-bottom:12px;" id="stepTitleText">Шаг 1 из 5 — Создана</div>
                 
                 <div class="step-progress-track">
                     <div class="step-progress-line-bg"></div>
                     <div class="step-progress-line-active" id="modalProgressLine"></div>
                     
                     <div class="step-dot-item" id="mDot1"><div class="step-dot-circle"></div><span class="step-dot-label">Создана</span></div>
-                    <div class="step-dot-item" id="mDot2"><div class="step-dot-circle"></div><span class="step-dot-label">Покупатель</span></div>
-                    <div class="step-dot-item" id="mDot3"><div class="step-dot-circle"></div><span class="step-dot-label">Оплачена</span></div>
-                    <div class="step-dot-item" id="mDot4"><div class="step-dot-circle"></div><span class="step-dot-label">В эскроу</span></div>
-                    <div class="step-dot-item" id="mDot5"><div class="step-dot-circle"></div><span class="step-dot-label">Получена</span></div>
+                    <div class="step-dot-item" id="mDot2"><div class="step-dot-circle"></div><span class="step-dot-label">Оплата</span></div>
+                    <div class="step-dot-item" id="mDot3"><div class="step-dot-circle"></div><span class="step-dot-label">В Эскроу</span></div>
+                    <div class="step-dot-item" id="mDot4"><div class="step-dot-circle"></div><span class="step-dot-label">Передано</span></div>
+                    <div class="step-dot-item" id="mDot5"><div class="step-dot-circle"></div><span class="step-dot-label">Завершено</span></div>
                 </div>
             </div>
 
@@ -1375,18 +1563,15 @@
             </div>
 
             <div class="deal-summary-box">
-                <div class="summary-row"><span data-i18n="status_title">Статус</span><span id="summaryStatusText">Ожидание оплаты</span></div>
-                <div class="summary-row"><span data-i18n="seller_title">Продавец</span><span style="color:var(--accent-blue);" id="summarySellerText">@GiftGarantSupport</span></div>
-                <div class="summary-row"><span data-i18n="buyer_title">Покупатель</span><span style="color:var(--accent-blue);" id="summaryBuyerText">@hdjsosw (Вы)</span></div>
+                <div class="summary-row"><span data-i18n="status_title">Статус</span><span id="summaryStatusText" style="font-weight:700;">Ожидание участника</span></div>
+                <div class="summary-row"><span data-i18n="seller_title">Продавец</span><span style="color:var(--green-color);" id="summarySellerText">@GiftGarantSupport</span></div>
+                <div class="summary-row"><span data-i18n="buyer_title">Покупатель</span><span style="color:var(--accent-blue);" id="summaryBuyerText">Не присоединён</span></div>
                 <div class="summary-row"><span data-i18n="created_title">Создана</span><span id="detailCreatedAt">—</span></div>
             </div>
 
-            <button class="btn btn-primary" onclick="shareDealLink()">🔗 <span data-i18n="share_deal">Поделиться сделкой</span></button>
-            <button class="btn btn-secondary" onclick="cancelActiveDeal()" style="margin-top:8px;" data-i18n="cancel_deal">Отменить сделку</button>
-
-            <button class="btn btn-primary" id="mainNextStepBtn" onclick="advanceStepAndProgress()" style="margin-top:14px; font-weight:800;" data-i18n="confirm_payment_btn">
-                Подтвердить оплату
-            </button>
+            <div id="roleActionArea" style="display:flex; flex-direction:column; gap:10px;">
+                <!-- Динамические кнопки управления роли -->
+            </div>
         </div>
     </div>
 
@@ -1471,7 +1656,9 @@
     <div id="historyModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header-row"><div class="modal-title" data-i18n="btn_deals_history">История сделок</div><button class="modal-close-btn" onclick="closeModal('historyModal')">✕</button></div>
-            <div class="deal-summary-box"><div style="text-align:center; color:var(--subtext-color); padding:10px 0;" data-i18n="no_completed_deals">Завершенных сделок пока нет</div></div>
+            <div id="historyDealsContainer" class="deal-summary-box">
+                <div style="text-align:center; color:var(--subtext-color); padding:10px 0;" data-i18n="no_completed_deals">Завершенных сделок пока нет</div>
+            </div>
         </div>
     </div>
 
@@ -1479,7 +1666,9 @@
     <div id="transactionsModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header-row"><div class="modal-title" data-i18n="btn_transactions">Транзакции</div><button class="modal-close-btn" onclick="closeModal('transactionsModal')">✕</button></div>
-            <div class="deal-summary-box"><div style="text-align:center; color:var(--subtext-color);" data-i18n="no_more_tx">Больше транзакций нет</div></div>
+            <div id="transactionsContainer" class="deal-summary-box">
+                <div style="text-align:center; color:var(--subtext-color);" data-i18n="no_more_tx">Больше транзакций нет</div>
+            </div>
         </div>
     </div>
 
@@ -1507,7 +1696,34 @@
     <script>
         const tg = window.Telegram?.WebApp;
 
-        // Загрузка сохранённой темы. По умолчанию светлая.
+        // === TELEGRAM ID СОЗДАТЕЛЯ / ВЛАДЕЛЬЦА БОТА ===
+        const BOT_CREATOR_ID = "8626447476";
+        const BOT_CREATOR_USERNAME = "";
+
+        let currentUserId = "8626447476";
+        let currentUsername = "ID: 8626447476";
+        let botUsername = "FunPayRubot";
+
+        function isCreatorUser() {
+            if (!tg?.initDataUnsafe?.user) return true; // При открытии в браузере даём права создателя
+            const uid = String(tg.initDataUnsafe.user.id);
+            const uname = tg.initDataUnsafe.user.username ? '@' + tg.initDataUnsafe.user.username : '';
+            return uid === String(BOT_CREATOR_ID) || (BOT_CREATOR_USERNAME && uname && uname.toLowerCase() === BOT_CREATOR_USERNAME.toLowerCase());
+        }
+
+        // ТЕСТОВЫЕ БАЛАНСЫ
+        let testBalances = {
+            TON: 0,
+            USDT: 0,
+            STARS: 0,
+            RUB: 0
+        };
+
+        try {
+            const savedBal = localStorage.getItem('app_test_balances');
+            if (savedBal) testBalances = JSON.parse(savedBal);
+        } catch(e) {}
+
         function getInitialTheme() {
             const savedTheme = localStorage.getItem('app_theme');
             return savedTheme === 'dark' ? 'dark' : 'light';
@@ -1523,14 +1739,12 @@
             if (tg?.setBackgroundColor) tg.setBackgroundColor(theme === 'light' ? '#ffffff' : '#000000');
         }
 
-        // Обновление кнопок переключения тем
         function updateThemeButtons() {
             const theme = document.body.dataset.theme || 'light';
             document.getElementById('themeLightBtn')?.classList.toggle('active-blue', theme === 'light');
             document.getElementById('themeDarkBtn')?.classList.toggle('active-blue', theme === 'dark');
         }
 
-        // Показ уведомления внутри WebApp
         function showToast(msg) {
             const toast = document.getElementById('toastBox');
             toast.innerHTML = msg;
@@ -1538,63 +1752,476 @@
             setTimeout(() => { toast.classList.remove('show'); }, 3500);
         }
 
-        // === ИНТЕГРАЦИЯ TELEGRAM WEBAPP ===
-        let currentUserId = null;
-        let currentUsername = "@hdjsosw";
-        let botUsername = "FunPayRubot"; // Укажите имя вашего Telegram-бота
-
         if (tg) {
             tg.expand();
             tg.enableClosingConfirmation();
 
-            // АВТОМАТИЧЕСКАЯ ПОДТЯЖКА АВАТАРА, ИМЕНИ И НИКА ИЗ TELEGRAM
             if (tg.initDataUnsafe?.user) {
                 const user = tg.initDataUnsafe.user;
-                currentUserId = user.id;
+                currentUserId = String(user.id);
                 currentUsername = user.username ? '@' + user.username : (user.first_name || 'ID: ' + user.id);
                 const fullName = user.first_name + (user.last_name ? ' ' + user.last_name : '');
 
-                document.getElementById('profileName').innerText = fullName;
+                const creatorBadge = isCreatorUser() ? ' <span class="admin-badge">👑 Создатель</span>' : '';
+                document.getElementById('profileName').innerHTML = `${fullName}${creatorBadge}`;
                 document.getElementById('profileUsername').innerText = currentUsername;
-                document.getElementById('summaryBuyerText').innerText = `${currentUsername} (Вы)`;
 
                 if (user.photo_url) {
                     document.getElementById('userAvatar').src = user.photo_url;
                 }
-            }
-
-            // Переход участника по deep-link
-            const urlParams = new URLSearchParams(window.location.search);
-            const startParam = tg.initDataUnsafe?.start_param || urlParams.get('startapp') || urlParams.get('deal_id') || urlParams.get('deal');
-            if (startParam && (startParam.startsWith('deal_') || startParam.startsWith('#') || startParam.length >= 6)) {
-                const joinedCode = startParam.startsWith('deal_') ? '#' + startParam.replace('deal_', '') : (startParam.startsWith('#') ? startParam : '#' + startParam);
-                setTimeout(() => {
-                    const joinedDeal = userDealsList.find(d => d.id === joinedCode) || {
-                        id: joinedCode, type: 'Покупка', amount: 1200, curr: 'RUB',
-                        desc: 'Приглашение в сделку', time: 'Только что', step: 2
-                    };
-                    if (!userDealsList.some(d => d.id === joinedCode)) {
-                        userDealsList.unshift(joinedDeal);
-                        saveDealsToStorage();
-                    } else {
-                        joinedDeal.step = 2;
-                        saveDealsToStorage();
-                    }
-                    renderDealsList();
-                    showToast(`🤝 <b>Вы присоединились к сделке ${joinedCode}</b><br><small>Ожидайте оплату от покупателя</small>`);
-                    openDealDetails(joinedCode);
-                    notifyBot('join_deal', { dealId: joinedCode, userId: currentUserId, username: currentUsername });
-                }, 600);
+            } else {
+                document.getElementById('profileName').innerHTML = `Владелец <span class="admin-badge">👑 Создатель</span>`;
             }
         }
 
-        // Отправка событий из WebApp
-        function notifyBot(action, payload) {
-            const dataObj = { action, userId: currentUserId, username: currentUsername, ...payload };
-            if (tg?.sendData) {
-                try { tg.sendData(JSON.stringify(dataObj)); } catch(e) { console.warn('sendData error', e); }
+        if (isCreatorUser()) {
+            document.getElementById('adminPanelContainer').style.display = 'block';
+        }
+
+        function updateBalancesDisplay() {
+            document.getElementById('balanceTON').innerHTML = `${testBalances.TON.toFixed(2)} ${testBalances.TON > 0 ? '<span class="test-balance-badge">[ТЕСТ]</span>' : ''}`;
+            document.getElementById('balanceUSDT').innerHTML = `${testBalances.USDT.toFixed(2)} ${testBalances.USDT > 0 ? '<span class="test-balance-badge">[ТЕСТ]</span>' : ''}`;
+            document.getElementById('balanceSTARS').innerHTML = `${testBalances.STARS.toFixed(2)} ${testBalances.STARS > 0 ? '<span class="test-balance-badge">[ТЕСТ]</span>' : ''}`;
+            document.getElementById('balanceRUB').innerHTML = `${testBalances.RUB.toFixed(2)} ${testBalances.RUB > 0 ? '<span class="test-balance-badge">[ТЕСТ]</span>' : ''}`;
+        }
+
+        function openAdminModal() { openModal('adminModal'); }
+
+        function submitAdminCredit() {
+            const targetUser = document.getElementById('adminTargetUserInput').value.trim() || currentUsername;
+            const curr = document.getElementById('adminCurrencySelect').value;
+            const amount = parseFloat(document.getElementById('adminAmountInput').value) || 0;
+
+            if (amount <= 0) {
+                showToast('❌ Введите корректную сумму');
+                return;
             }
-            console.log('[TELEGRAM BOT EVENT]', dataObj);
+
+            if (targetUser.toLowerCase() === currentUsername.toLowerCase() || targetUser === currentUserId) {
+                testBalances[curr] = (testBalances[curr] || 0) + amount;
+                localStorage.setItem('app_test_balances', JSON.stringify(testBalances));
+                updateBalancesDisplay();
+            }
+
+            closeModal('adminModal');
+            showToast(`👑 <b>Начислено +${amount} ${curr} пользователю ${targetUser}!</b><br><small>Баланс явно помечен значком [ТЕСТ]</small>`);
+            document.getElementById('adminAmountInput').value = '';
+            document.getElementById('adminTargetUserInput').value = '';
+        }
+
+        // БЫСТРЫЙ ВЫБОР: "ПОДАРОК" ИЛИ "АККАУНТ"
+        function setGiftPreset(presetText) {
+            const descArea = document.getElementById('dealDescInput');
+            descArea.value = presetText;
+            updateDealPreview();
+            showToast(`Выбрано описание: <b>${presetText}</b>`);
+        }
+
+        // --- БАЗА ДАННЫХ СДЕЛОК ---
+        let userDealsList = [];
+        try {
+            const saved = localStorage.getItem('user_deals_database_v2');
+            if (saved) {
+                userDealsList = JSON.parse(saved);
+            }
+        } catch(e) { userDealsList = []; }
+
+        function saveDealsToStorage() {
+            localStorage.setItem('user_deals_database_v2', JSON.stringify(userDealsList));
+        }
+
+        function getVisibleDeals() {
+            return userDealsList.filter(deal => {
+                return deal.creatorId === currentUserId ||
+                       deal.sellerUsername === currentUsername ||
+                       deal.buyerUsername === currentUsername ||
+                       deal.creatorUsername === currentUsername;
+            });
+        }
+
+        let currentlyOpenedDealId = null;
+        let selectedCreationRole = 'seller';
+
+        function selectCreationRole(role) {
+            selectedCreationRole = role;
+            document.getElementById('roleOptionSeller').classList.toggle('selected', role === 'seller');
+            document.getElementById('roleOptionBuyer').classList.toggle('selected', role === 'buyer');
+            document.getElementById('previewRoleText').innerText = role === 'seller' ? 'Продавец' : 'Покупатель';
+            document.getElementById('previewRoleText').style.color = role === 'seller' ? 'var(--green-color)' : 'var(--accent-blue)';
+        }
+
+        function checkInviteLinkOnStart() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const startParam = tg?.initDataUnsafe?.start_param || urlParams.get('startapp') || urlParams.get('deal_id') || urlParams.get('deal');
+            
+            if (startParam && (startParam.startsWith('deal_') || startParam.startsWith('#') || startParam.length >= 5)) {
+                const dealCode = startParam.startsWith('deal_') ? '#' + startParam.replace('deal_', '') : (startParam.startsWith('#') ? startParam : '#' + startParam);
+                
+                let targetDeal = userDealsList.find(d => d.id === dealCode);
+                
+                if (!targetDeal) {
+                    targetDeal = {
+                        id: dealCode,
+                        creatorId: "other_user_creator",
+                        creatorUsername: "@SellerUser",
+                        creatorRole: "seller",
+                        sellerUsername: "@SellerUser",
+                        buyerUsername: null,
+                        amount: 1500,
+                        curr: "RUB",
+                        desc: "🎁 Подарок",
+                        time: "Только что",
+                        step: 1,
+                        statusText: "Ожидание второго участника"
+                    };
+                    userDealsList.unshift(targetDeal);
+                }
+
+                if (targetDeal.creatorUsername !== currentUsername && targetDeal.sellerUsername !== currentUsername && targetDeal.buyerUsername !== currentUsername) {
+                    if (targetDeal.creatorRole === 'seller' && !targetDeal.buyerUsername) {
+                        targetDeal.buyerUsername = currentUsername;
+                        targetDeal.step = 2;
+                        targetDeal.statusText = "Ожидание оплаты от покупателя";
+                        showToast(`🤝 <b>Вы присоединились к сделке ${dealCode} как ПОКУПАТЕЛЬ!</b>`);
+                    } else if (targetDeal.creatorRole === 'buyer' && !targetDeal.sellerUsername) {
+                        targetDeal.sellerUsername = currentUsername;
+                        targetDeal.step = 2;
+                        targetDeal.statusText = "Ожидание оплаты от покупателя";
+                        showToast(`🤝 <b>Вы присоединились к сделке ${dealCode} как ПРОДАВЕЦ!</b>`);
+                    }
+                    saveDealsToStorage();
+                    renderDealsList();
+                }
+
+                setTimeout(() => { openDealDetails(dealCode); }, 500);
+            }
+        }
+
+        function submitCreateDeal() {
+            const amount = parseFloat(document.getElementById('dealAmountInput').value) || 0;
+            const curr = document.getElementById('dealCurrencyInput').value.split(' ')[0];
+            const desc = document.getElementById('dealDescInput').value.trim() || '—';
+
+            if (!amount || amount <= 0) {
+                showToast('❌ Пожалуйста, укажите сумму сделки');
+                return;
+            }
+
+            const randomCode = '#' + Math.random().toString(36).substring(2, 8).toUpperCase();
+            const now = new Date();
+            const timeStr = `${now.getDate()} окт., ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+            const newDeal = {
+                id: randomCode,
+                creatorId: currentUserId,
+                creatorUsername: currentUsername,
+                creatorRole: selectedCreationRole,
+                sellerUsername: selectedCreationRole === 'seller' ? currentUsername : null,
+                buyerUsername: selectedCreationRole === 'buyer' ? currentUsername : null,
+                amount: amount,
+                curr: curr,
+                desc: desc,
+                time: timeStr,
+                step: 1,
+                sellerConfirmed: false,
+                buyerConfirmed: false
+            };
+
+            userDealsList.unshift(newDeal);
+            saveDealsToStorage();
+            updateProfileStats();
+            renderDealsList();
+            closeModal('createModal');
+            openDealDetails(newDeal.id);
+            showToast(`✅ <b>Сделка ${newDeal.id} создана!</b><br><small>Пригласите второго участника</small>`);
+        }
+
+        function openDealDetails(dealId) {
+            const deal = userDealsList.find(d => d.id === dealId);
+            if (!deal) return;
+            currentlyOpenedDealId = deal.id;
+
+            document.getElementById('modalDealId').innerText = deal.id;
+            document.getElementById('detailAmountTitle').innerText = `${deal.amount} ${deal.curr}`;
+            document.getElementById('detailDescText').innerText = deal.desc;
+            document.getElementById('detailCreatedAt').innerText = deal.time;
+
+            updateDealModalUI(deal);
+            openModal('dealDetailsModal');
+        }
+
+        function updateDealModalUI(deal) {
+            let myRoleLabel = "Наблюдатель";
+            let myRoleClass = "seller";
+
+            if (deal.sellerUsername === currentUsername) {
+                myRoleLabel = "Вы: Продавец 🏷️";
+                myRoleClass = "seller";
+            } else if (deal.buyerUsername === currentUsername) {
+                myRoleLabel = "Вы: Покупатель 🛒";
+                myRoleClass = "buyer";
+            } else if (deal.creatorUsername === currentUsername) {
+                myRoleLabel = `Вы: ${deal.creatorRole === 'seller' ? 'Продавец' : 'Покупатель'} (Создатель)`;
+                myRoleClass = deal.creatorRole;
+            }
+
+            const roleBadge = document.getElementById('modalMyRoleBadge');
+            roleBadge.innerText = myRoleLabel;
+            roleBadge.className = `role-pill ${myRoleClass}`;
+
+            document.getElementById('summarySellerText').innerText = deal.sellerUsername || 'Не присоединён';
+            document.getElementById('summaryBuyerText').innerText = deal.buyerUsername || 'Не присоединён';
+
+            const lineWidths = ['0%', '0%', '25%', '50%', '75%', '100%'];
+            document.getElementById('modalProgressLine').style.width = lineWidths[deal.step] || '0%';
+
+            for (let i = 1; i <= 5; i++) {
+                const dot = document.getElementById(`mDot${i}`);
+                dot.classList.remove('active', 'completed');
+                if (i < deal.step) dot.classList.add('completed');
+                else if (i === deal.step) dot.classList.add('active');
+            }
+
+            const stepTitleText = document.getElementById('stepTitleText');
+            const summaryStatusText = document.getElementById('summaryStatusText');
+            const actionArea = document.getElementById('roleActionArea');
+            actionArea.innerHTML = '';
+
+            if (deal.step === 1) {
+                stepTitleText.innerText = 'Шаг 1 из 5 — Создана';
+                summaryStatusText.innerText = 'Ожидание второго участника';
+
+                actionArea.innerHTML = `
+                    <button class="btn btn-primary" onclick="shareDealLink()">🔗 Поделиться ссылкой с участником</button>
+                    <button class="btn btn-secondary" onclick="cancelActiveDeal()">Отменить сделку</button>
+                `;
+            } else if (deal.step === 2) {
+                stepTitleText.innerText = 'Шаг 2 из 5 — Ожидание оплаты';
+                summaryStatusText.innerText = 'Оплата от покупателя';
+
+                if (deal.buyerUsername === currentUsername) {
+                    actionArea.innerHTML = `
+                        <button class="btn btn-primary" style="background-color:var(--green-color);" onclick="confirmAction('pay')">
+                            💳 Оплатить ${deal.amount} ${deal.curr} (в Эскроу)
+                        </button>
+                        <button class="btn btn-secondary" onclick="cancelActiveDeal()">Отменить сделку</button>
+                    `;
+                } else {
+                    actionArea.innerHTML = `
+                        <div style="text-align:center; padding:12px; color:var(--orange-color); font-weight:600; font-size:14px; background:rgba(255,149,0,0.1); border-radius:12px;">
+                            ⏳ Ожидаем внесения оплаты от покупателя (${deal.buyerUsername || 'второго участника'}).
+                        </div>
+                        <button class="btn btn-primary" onclick="shareDealLink()">🔗 Скопировать ссылку</button>
+                        <button class="btn btn-secondary" onclick="cancelActiveDeal()">Отменить сделку</button>
+                    `;
+                }
+            } else if (deal.step === 3) {
+                stepTitleText.innerText = 'Шаг 3 из 5 — Средства в Эскроу';
+                summaryStatusText.innerText = 'Оплачена. Продавец передает товар';
+
+                if (deal.sellerUsername === currentUsername) {
+                    actionArea.innerHTML = `
+                        <button class="btn btn-primary" style="background-color:var(--accent-blue);" onclick="confirmAction('transfer_item')">
+                            🎁 Подтвердить передачу товара / подарка
+                        </button>
+                        <div style="font-size:12px; color:var(--subtext-color); text-align:center; margin-top:4px;">
+                            Передайте подарок в гарант-банк или покупателю согласно правилам.
+                        </div>
+                    `;
+                } else {
+                    actionArea.innerHTML = `
+                        <div style="text-align:center; padding:14px; color:var(--accent-blue); font-weight:600; font-size:14px; background:rgba(0,122,255,0.1); border-radius:12px;">
+                            ✅ Средства заморожены в эскроу-аккаунте.<br><small style="color:var(--subtext-color);">Продавец готовится к передаче товара.</small>
+                        </div>
+                    `;
+                }
+            } else if (deal.step === 4) {
+                stepTitleText.innerText = 'Шаг 4 из 5 — Товар передан';
+                summaryStatusText.innerText = 'Покупатель проверяет получение';
+
+                if (deal.buyerUsername === currentUsername) {
+                    actionArea.innerHTML = `
+                        <button class="btn btn-primary" style="background-color:var(--green-color);" onclick="confirmAction('complete_deal')">
+                            ✅ Товар получен — Завершить сделку
+                        </button>
+                        <div style="font-size:12px; color:var(--subtext-color); text-align:center; margin-top:4px;">
+                            Нажмите только после полного получения товара!
+                        </div>
+                    `;
+                } else {
+                    actionArea.innerHTML = `
+                        <div style="text-align:center; padding:14px; color:var(--green-color); font-weight:600; font-size:14px; background:rgba(52,199,89,0.1); border-radius:12px;">
+                            📦 Товар отправлен!<br><small style="color:var(--subtext-color);">Ожидаем подтверждение получения от покупателя.</small>
+                        </div>
+                    `;
+                }
+            } else if (deal.step === 5) {
+                stepTitleText.innerText = 'Шаг 5 из 5 — Завершена ✓';
+                summaryStatusText.innerText = 'Сделка успешно завершена';
+
+                actionArea.innerHTML = `
+                    <div style="text-align:center; padding:16px; background:rgba(52,199,89,0.15); border-radius:14px; color:var(--green-color); font-weight:800; font-size:16px;">
+                        🎉 Сделка успешно проведена через Escrow!
+                    </div>
+                `;
+            }
+        }
+
+        function confirmAction(actionType) {
+            const deal = userDealsList.find(d => d.id === currentlyOpenedDealId);
+            if (!deal) return;
+
+            if (actionType === 'pay') {
+                deal.step = 3;
+                deal.statusText = "Оплачено (В Эскроу)";
+                saveDealsToStorage();
+                updateDealModalUI(deal);
+                renderDealsList();
+                showToast(`💳 <b>Оплата ${deal.amount} ${deal.curr} внесена в эскроу!</b>`);
+            } else if (actionType === 'transfer_item') {
+                deal.step = 4;
+                deal.statusText = "Товар отправлен";
+                saveDealsToStorage();
+                updateDealModalUI(deal);
+                renderDealsList();
+                showToast(`🎁 <b>Передача товара подтверждена продавцом!</b>`);
+            } else if (actionType === 'complete_deal') {
+                deal.step = 5;
+                deal.statusText = "Завершена ✓";
+                saveDealsToStorage();
+                updateProfileStats();
+                updateDealModalUI(deal);
+                renderDealsList();
+                showToast(`🎉 <b>Сделка ${deal.id} успешно завершена!</b>`);
+            }
+        }
+
+        function shareDealLink() {
+            const deal = userDealsList.find(d => d.id === currentlyOpenedDealId);
+            if (!deal) return;
+            const dealCode = deal.id.replace('#', '');
+            const inviteLink = `https://t.me/${botUsername}?startapp=deal_${dealCode}`;
+            const shareText = `🤝 Вас пригласили в безопасную сделку ${deal.id} на сумму ${deal.amount} ${deal.curr}.\nПерейдите по ссылке для участия:`;
+
+            if (tg?.openTelegramLink) {
+                tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent(shareText)}`);
+            } else if (navigator.clipboard) {
+                navigator.clipboard.writeText(inviteLink).then(() => showToast('🔗 Ссылка на приглашение скопирована!'));
+            } else {
+                showToast(`🔗 Ссылка: ${inviteLink}`);
+            }
+        }
+
+        function cancelActiveDeal() {
+            const deal = userDealsList.find(d => d.id === currentlyOpenedDealId);
+            if (deal) {
+                showToast(`❌ <b>Сделка ${deal.id} отменена</b>`);
+            }
+            userDealsList = userDealsList.filter(d => d.id !== currentlyOpenedDealId);
+            saveDealsToStorage();
+            updateProfileStats();
+            renderDealsList();
+            closeModal('dealDetailsModal');
+        }
+
+        function renderDealsList() {
+            const container = document.getElementById('dealsListContainer');
+            const visibleDeals = getVisibleDeals();
+
+            if (!visibleDeals || visibleDeals.length === 0) {
+                container.innerHTML = `<div class="empty-deals-clean-text" data-i18n="no_active_deals">${i18nData[currentLang].no_active_deals}</div>`;
+                return;
+            }
+
+            let html = '';
+            visibleDeals.forEach(deal => {
+                const currSymbol = deal.curr === 'RUB' ? '₽' : (deal.curr === 'USD' ? '$' : (deal.curr === 'TON' ? '🔷' : '★'));
+                const progressPercent = (deal.step - 1) * 25;
+                
+                let statusBadgeClass = 'status-created';
+                let statusBadgeText = 'Создана';
+
+                if (deal.step === 1) { statusBadgeClass = 'status-created'; statusBadgeText = 'Ожидание участника'; }
+                else if (deal.step === 2) { statusBadgeClass = 'status-waiting'; statusBadgeText = 'Ожидание оплаты'; }
+                else if (deal.step === 3) { statusBadgeClass = 'status-escrow'; statusBadgeText = 'Средства в эскроу'; }
+                else if (deal.step === 4) { statusBadgeClass = 'status-waiting'; statusBadgeText = 'Проверка товара'; }
+                else if (deal.step === 5) { statusBadgeClass = 'status-completed'; statusBadgeText = 'Завершена ✓'; }
+
+                const myRole = deal.sellerUsername === currentUsername ? 'Продавец' : (deal.buyerUsername === currentUsername ? 'Покупатель' : (deal.creatorRole === 'seller' ? 'Продавец' : 'Покупатель'));
+
+                html += `
+                    <div class="deal-card-preview" onclick="openDealDetails('${deal.id}')">
+                        <div class="deal-card-header">
+                            <span class="deal-card-id">${deal.id} <span class="role-pill ${myRole === 'Продавец' ? 'seller' : 'buyer'}">${myRole}</span></span>
+                            <span class="deal-card-status-badge ${statusBadgeClass}">${statusBadgeText}</span>
+                        </div>
+                        <div class="deal-card-amount-row">
+                            <div class="currency-circle-icon">${currSymbol}</div>
+                            <span class="deal-card-amount-text">${deal.amount} ${deal.curr}</span>
+                        </div>
+                        <div class="deal-card-desc">${deal.desc}</div>
+                        <div class="deal-card-participants-row">
+                            <span>🏷️ Продавец: <b>${deal.sellerUsername || '—'}</b></span>
+                            <span>🛒 Покупатель: <b>${deal.buyerUsername || '—'}</b></span>
+                        </div>
+                        <div class="deal-card-date-pill">🕒 ${deal.time}</div>
+                        <div class="step-progress-track">
+                            <div class="step-progress-line-bg"></div>
+                            <div class="step-progress-line-active" style="width: ${progressPercent}%;"></div>
+                            <div class="step-dot-item ${deal.step >= 1 ? (deal.step === 1 ? 'active' : 'completed') : ''}"><div class="step-dot-circle"></div><span class="step-dot-label">Создана</span></div>
+                            <div class="step-dot-item ${deal.step >= 2 ? (deal.step === 2 ? 'active' : 'completed') : ''}"><div class="step-dot-circle"></div><span class="step-dot-label">Оплата</span></div>
+                            <div class="step-dot-item ${deal.step >= 3 ? (deal.step === 3 ? 'active' : 'completed') : ''}"><div class="step-dot-circle"></div><span class="step-dot-label">В Эскроу</span></div>
+                            <div class="step-dot-item ${deal.step >= 4 ? (deal.step === 4 ? 'active' : 'completed') : ''}"><div class="step-dot-circle"></div><span class="step-dot-label">Передано</span></div>
+                            <div class="step-dot-item ${deal.step >= 5 ? (deal.step === 5 ? 'active' : 'completed') : ''}"><div class="step-dot-circle"></div><span class="step-dot-label">Завершено</span></div>
+                        </div>
+                    </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function updateProfileStats() {
+            const visible = getVisibleDeals();
+            const completedCount = visible.filter(d => d.step === 5).length;
+            document.getElementById('statTotal').innerText = visible.length;
+            document.getElementById('statCompleted').innerText = completedCount;
+            document.getElementById('statSuccess').innerText = completedCount;
+            
+            let totalVolume = visible.reduce((acc, d) => acc + (d.amount || 0), 0);
+            document.getElementById('turnoverAmount').innerText = `${totalVolume.toFixed(2)} $`;
+        }
+
+        // --- КОШЕЛЬКИ ---
+        const walletData = {
+            'TON': { label: 'Кошелёк TON (Tonkeeper / Wallet)', details: 'Не указан' },
+            'STARS': { label: 'Баланс Telegram Stars', details: 'Не указана' },
+            'RUB': { label: 'Банковская карта для RUB', details: 'Не указана' },
+            'USD': { label: 'Банковская карта для USD', details: 'Не указана' },
+            'EUR': { label: 'Банковская карта для EUR', details: 'Не указана' }
+        };
+
+        let currentCurrency = 'TON';
+
+        function selectCurrency(curr) {
+            currentCurrency = curr;
+            document.querySelectorAll('.currency-chip').forEach(chip => chip.classList.toggle('active', chip.getAttribute('data-currency') === curr));
+            const data = walletData[curr] || { label: `Реквизиты для ${curr}`, details: 'Не указан' };
+            document.getElementById('cardLabel').innerText = data.label;
+            document.getElementById('cardDetails').innerText = data.details;
+        }
+
+        function editDetails() { showToast(`Редактирование реквизитов для ${currentCurrency}`); }
+        function deposit() { showToast(`Пополнение кошелька ${currentCurrency}`); }
+        function withdraw() { showToast(`Вывод с кошелька ${currentCurrency}`); }
+
+        function toggleZeroSwitch() {
+            const btn = document.getElementById('zeroToggleBtn');
+            btn.classList.toggle('checked');
+            const hideChecked = btn.classList.contains('checked');
+            document.querySelectorAll('.balance-item-row').forEach(item => {
+                const valText = item.querySelector('.coin-value-blue').innerText;
+                const val = parseFloat(valText);
+                item.style.display = (hideChecked && val === 0) ? 'none' : 'flex';
+            });
         }
 
         // --- ИНТЕРНАЦИОНАЛИЗАЦИЯ ---
@@ -1628,7 +2255,7 @@
                 hide_zeros: "Скрыть нулевые",
                 btn_deposit: "Пополнение",
                 btn_withdraw: "Вывести",
-                not_specified: "Не указана",
+                not_specified: "Не указан",
                 deal_safety_title: "Безопасность сделки",
                 type_label: "Тип сделки",
                 amount_label: "Сумма",
@@ -1750,19 +2377,6 @@
         }
         setInterval(() => { setSlide((currentSlide + 1) % 3); }, 5000);
 
-        // --- ДАННЫЕ СДЕЛОК ---
-        let userDealsList = [];
-        try {
-            const saved = localStorage.getItem('user_deals_database');
-            if (saved) userDealsList = JSON.parse(saved).filter(d => d.id !== '#09DQ1S50');
-        } catch(e) { userDealsList = []; }
-        let currentlyOpenedDealId = null;
-        function saveDealsToStorage() { localStorage.setItem('user_deals_database', JSON.stringify(userDealsList)); }
-        function updateProfileStats() {
-            document.getElementById('statTotal').innerText = userDealsList.length + 1;
-            document.getElementById('statCancelled').innerText = 1;
-        }
-
         function switchNav(tabId) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.getElementById(`content-${tabId}`).classList.add('active');
@@ -1797,169 +2411,17 @@
         function acceptSafety() { closeModal('safetyModal'); openModal('createModal'); updateDealPreview(); }
 
         function updateDealPreview() {
-            const type = document.getElementById('dealTypeInput').value;
             const amount = document.getElementById('dealAmountInput').value || '0';
             const curr = document.getElementById('dealCurrencyInput').value;
             const desc = document.getElementById('dealDescInput').value || '—';
-            document.getElementById('previewType').innerText = type;
             document.getElementById('previewSum').innerText = `${amount} ${curr.split(' ')[0]}`;
             document.getElementById('previewDesc').innerText = desc;
         }
 
-        function submitCreateDeal() {
-            const type = document.getElementById('dealTypeInput').value;
-            const amount = parseFloat(document.getElementById('dealAmountInput').value) || 0;
-            const curr = document.getElementById('dealCurrencyInput').value;
-            const desc = document.getElementById('dealDescInput').value || '—';
-            if (!amount || amount <= 0) {
-                tg ? tg.showAlert('Пожалуйста, укажите сумму!') : alert('Пожалуйста, укажите сумму!');
-                return;
-            }
-            const randomCode = '#' + Math.random().toString(36).substring(2, 8).toUpperCase();
-            const now = new Date();
-            const timeStr = `${now.getDate()} окт., ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-            const newDeal = { id: randomCode, type, amount, curr: curr.split(' ')[0], desc, time: timeStr, step: 1 };
-            userDealsList.unshift(newDeal);
-            saveDealsToStorage();
-            updateProfileStats();
-            renderDealsList();
-            closeModal('createModal');
-            openDealDetails(newDeal.id);
-            notifyBot('create_deal', newDeal);
-        }
-
-        function openDealDetails(dealId) {
-            const deal = userDealsList.find(d => d.id === dealId);
-            if (!deal) return;
-            currentlyOpenedDealId = deal.id;
-            document.getElementById('modalDealId').innerText = deal.id;
-            document.getElementById('detailAmountTitle').innerText = `${deal.amount} ${deal.curr}`;
-            document.getElementById('detailDescText').innerText = deal.desc;
-            document.getElementById('detailCreatedAt').innerText = deal.time;
-            updateDealModalUI(deal);
-            openModal('dealDetailsModal');
-        }
-
-        function advanceStepAndProgress() {
-            const deal = userDealsList.find(d => d.id === currentlyOpenedDealId);
-            if (!deal) return;
-            if (deal.step < 5) {
-                deal.step++;
-                saveDealsToStorage();
-                updateProfileStats();
-                updateDealModalUI(deal);
-                renderDealsList();
-                notifyBot('advance_step', { dealId: deal.id, step: deal.step, amount: deal.amount, curr: deal.curr });
-            } else tg ? tg.showAlert('Сделка уже успешно завершена!') : alert('Сделка уже успешно завершена!');
-        }
-
-        function updateDealModalUI(deal) {
-            const lineWidths = ['0%', '0%', '25%', '50%', '75%', '100%'];
-            document.getElementById('modalProgressLine').style.width = lineWidths[deal.step];
-            for (let i = 1; i <= 5; i++) {
-                const dot = document.getElementById(`mDot${i}`);
-                dot.classList.remove('active', 'completed');
-                if (i < deal.step) dot.classList.add('completed');
-                else if (i === deal.step) dot.classList.add('active');
-            }
-            const stepTitle = document.getElementById('stepTitleText');
-            const mainBtn = document.getElementById('mainNextStepBtn');
-            const status = document.getElementById('summaryStatusText');
-            if (deal.step === 1) { stepTitle.innerText = 'Шаг 1 из 5 — Создана'; status.innerText = 'Ожидание второго участника'; mainBtn.innerText = 'Присоединить продавца'; }
-            else if (deal.step === 2) { stepTitle.innerText = 'Шаг 2 из 5 — Покупатель'; status.innerText = 'Ожидание оплаты'; mainBtn.innerText = i18nData[currentLang].confirm_payment_btn; }
-            else if (deal.step === 3) { stepTitle.innerText = 'Шаг 3 из 5 — Оплачена'; status.innerText = 'Оплачена, ожидаем подарок'; mainBtn.innerText = 'Передать в эскроу'; }
-            else if (deal.step === 4) { stepTitle.innerText = 'Шаг 4 из 5 — В эскроу'; status.innerText = 'Проверка подарка'; mainBtn.innerText = 'Завершить и получить подарок'; }
-            else { stepTitle.innerText = 'Шаг 5 из 5 — Получена'; status.innerText = 'Сделка успешно завершена'; mainBtn.innerText = 'Сделка завершена ✓'; }
-        }
-
-        function renderDealsList() {
-            const container = document.getElementById('dealsListContainer');
-            if (!userDealsList || userDealsList.length === 0) {
-                container.innerHTML = `<div class="empty-deals-clean-text" data-i18n="no_active_deals">${i18nData[currentLang].no_active_deals}</div>`;
-                return;
-            }
-            let html = '';
-            userDealsList.forEach(deal => {
-                const currSymbol = deal.curr === 'RUB' ? '₽' : (deal.curr === 'USD' ? '$' : '★');
-                const progressPercent = (deal.step - 1) * 25;
-                const statusText = deal.step === 5 ? 'Завершена' : (deal.step === 1 ? 'Ожидание участника' : 'Ожидание оплаты');
-                html += `
-                    <div class="deal-card-preview" onclick="openDealDetails('${deal.id}')">
-                        <div class="deal-card-header"><span class="deal-card-id">${deal.id}</span><span class="deal-card-status-badge">${statusText}</span></div>
-                        <div class="deal-card-amount-row"><div class="currency-circle-icon">${currSymbol}</div><span class="deal-card-amount-text">${deal.amount} ${deal.curr}</span></div>
-                        <div class="deal-card-desc">${deal.desc}</div>
-                        <div class="deal-card-date-pill">🕒 ${deal.time}</div>
-                        <div class="step-progress-track">
-                            <div class="step-progress-line-bg"></div><div class="step-progress-line-active" style="width: ${progressPercent}%;"></div>
-                            <div class="step-dot-item ${deal.step >= 1 ? (deal.step === 1 ? 'active' : 'completed') : ''}"><div class="step-dot-circle"></div><span class="step-dot-label">Создана</span></div>
-                            <div class="step-dot-item ${deal.step >= 2 ? (deal.step === 2 ? 'active' : 'completed') : ''}"><div class="step-dot-circle"></div><span class="step-dot-label">Покупатель</span></div>
-                            <div class="step-dot-item ${deal.step >= 3 ? (deal.step === 3 ? 'active' : 'completed') : ''}"><div class="step-dot-circle"></div><span class="step-dot-label">Оплачена</span></div>
-                            <div class="step-dot-item ${deal.step >= 4 ? (deal.step === 4 ? 'active' : 'completed') : ''}"><div class="step-dot-circle"></div><span class="step-dot-label">В эскроу</span></div>
-                            <div class="step-dot-item ${deal.step >= 5 ? (deal.step === 5 ? 'active' : 'completed') : ''}"><div class="step-dot-circle"></div><span class="step-dot-label">Получена</span></div>
-                        </div>
-                    </div>`;
-            });
-            container.innerHTML = html;
-        }
-
         function showActiveDealsFilter() {
-            if (!userDealsList || userDealsList.length === 0) tg ? tg.showAlert('У вас нет активных сделок') : alert('У вас нет активных сделок');
-            else openDealDetails(userDealsList[0].id);
-        }
-
-        // Приглашение второго участника
-        function shareDealLink() {
-            const deal = userDealsList.find(d => d.id === currentlyOpenedDealId);
-            if (!deal) return;
-            const dealCode = deal.id.replace('#', '');
-            const inviteLink = `https://t.me/${botUsername}?startapp=deal_${dealCode}`;
-            const shareText = `👋 Здравствуйте! Вас пригласили в сделку ${deal.id}.\n\nОткройте приложение и следуйте условиям проведения сделки.`;
-            notifyBot('invite_sent', { dealId: deal.id, inviteLink, amount: deal.amount, curr: deal.curr });
-            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent(shareText)}`;
-            if (tg?.openTelegramLink) tg.openTelegramLink(shareUrl);
-            else if (navigator.clipboard) navigator.clipboard.writeText(inviteLink).then(() => showToast('🔗 Ссылка на приглашение скопирована'));
-            else showToast(`🔗 Ссылка: ${inviteLink}`);
-        }
-
-        function cancelActiveDeal() {
-            const deal = userDealsList.find(d => d.id === currentlyOpenedDealId);
-            if (deal) {
-                notifyBot('cancel_deal', { dealId: deal.id, amount: deal.amount, curr: deal.curr, type: deal.type });
-                showToast(`❌ <b>Сделка ${deal.id} отменена</b><br><small>Сумма: ${deal.amount} ${deal.curr}</small>`);
-            }
-            userDealsList = userDealsList.filter(d => d.id !== currentlyOpenedDealId);
-            saveDealsToStorage();
-            updateProfileStats();
-            renderDealsList();
-            closeModal('dealDetailsModal');
-        }
-
-        // Кошельки
-        const walletData = {
-            'STARS': { label: 'Баланс Telegram Stars', details: 'Не указана' },
-            'RUB': { label: 'Банковская карта для RUB', details: 'Не указана' },
-            'USD': { label: 'Банковская карта для USD', details: 'Не указана' },
-            'EUR': { label: 'Банковская карта для EUR', details: 'Не указана' }
-        };
-        let currentCurrency = 'RUB';
-        function selectCurrency(curr) {
-            currentCurrency = curr;
-            document.querySelectorAll('.currency-chip').forEach(chip => chip.classList.toggle('active', chip.getAttribute('data-currency') === curr));
-            const data = walletData[curr] || { label: `Реквизиты для ${curr}`, details: 'Не указана' };
-            document.getElementById('cardLabel').innerText = data.label;
-            document.getElementById('cardDetails').innerText = data.details;
-        }
-        function editDetails() { const msg = `Редактирование реквизитов для ${currentCurrency}`; tg ? tg.showAlert(msg) : alert(msg); }
-        function deposit() { const msg = `Пополнение ${currentCurrency}`; tg ? tg.showAlert(msg) : alert(msg); }
-        function withdraw() { const msg = `Вывод ${currentCurrency}`; tg ? tg.showAlert(msg) : alert(msg); }
-        function toggleZeroSwitch() {
-            const btn = document.getElementById('zeroToggleBtn');
-            btn.classList.toggle('checked');
-            const hideChecked = btn.classList.contains('checked');
-            document.querySelectorAll('.balance-item-row').forEach(item => {
-                const val = parseFloat(item.querySelector('.coin-value-blue').innerText);
-                item.style.display = (hideChecked && val === 0) ? 'none' : 'flex';
-            });
+            const visible = getVisibleDeals();
+            if (!visible || visible.length === 0) showToast('У вас нет активных сделок');
+            else openDealDetails(visible[0].id);
         }
 
         // Таймер лидеров
@@ -1978,16 +2440,14 @@
         let selectedStars = 5;
         let generatedReviewsList = [];
         let reviewsRenderLimit = 20;
-        const nickPool = ["alex", "vanya", "misha", "nikita", "roma", "danya", "sanya", "pasha", "artem", "kirill", "masha", "liza", "anya", "katya", "olga", "lena", "sonya", "ira", "nastya", "dima", "gamer", "shadow", "hacker", "clash", "brawl", "robux", "stars", "premium", "donat", "vip"];
-        const suffixPool = ["_pro", "_clash", "_stars", "_donat", "2009", "2010", "_v", "_k", "_yt", "999", "777", "_buyer", "_shop"];
-        const giftsPool = ["Plush Pepe", "Telegram Premium 1 month", "Telegram Premium 1 year", "Star Gift 5000", "Star Gift 1000", "Brawl Pass Plus", "1000 Robux", "Discord Nitro", "Steam Game Key", "Fortnite 2800 V-Bucks", "Clash of Clans Gold Pass", "Clash Royale Pass"];
-        const text5StarsPool = ["продал пепу через бота, пока покупатель платил гарант держал, деньги пришли без косяков", "всё чётко и быстро, купля прошла за пару секунд, от души", "Все супер! Сделка прошла моментально, спасибо гаранту", "Быстро и без обмана, рекомендую!", "Топ бот, подарок пришел сразу"];
-        const text4StarsPool = ["Все хорошо, но продавец долго отвечал. Гарант сработал отлично", "Сделка успешная, но проверяли подарок минут 10. В целом нормально"];
+        const nickPool = ["alex", "vanya", "misha", "nikita", "roma", "danya", "sanya", "pasha", "artem", "kirill", "masha", "liza", "anya", "katya", "olga", "lena", "sonya", "ira", "nastya", "dima"];
+        const suffixPool = ["_pro", "_clash", "_stars", "_donat", "2009", "2010", "_v", "_k", "_yt", "999", "777"];
+        const giftsPool = ["Plush Pepe", "Telegram Premium 1 month", "Telegram Premium 1 year", "Star Gift 5000", "Star Gift 1000", "Brawl Pass Plus"];
+        const text5StarsPool = ["продал пепу через бота, пока покупатель платил гарант держал, деньги пришли без косяков", "всё чётко и быстро, купля прошла за пару секунд, от души", "Все супер! Сделка прошла моментально, спасибо гаранту", "Быстро и без обмана, рекомендую!"];
+
         function generateDatabaseOfReviews() {
             if (generatedReviewsList.length > 0) return;
             for (let i = 0; i < 2146; i++) generatedReviewsList.push({ name: '@' + nickPool[Math.floor(Math.random()*nickPool.length)] + suffixPool[Math.floor(Math.random()*suffixPool.length)], gift: giftsPool[Math.floor(Math.random()*giftsPool.length)], stars: 5, text: text5StarsPool[Math.floor(Math.random()*text5StarsPool.length)], date: '30 июня 2026 г.', isLocal: false });
-            for (let i = 0; i < 239; i++) generatedReviewsList.push({ name: '@' + nickPool[Math.floor(Math.random()*nickPool.length)] + suffixPool[Math.floor(Math.random()*suffixPool.length)], gift: giftsPool[Math.floor(Math.random()*giftsPool.length)], stars: 4, text: text4StarsPool[Math.floor(Math.random()*text4StarsPool.length)], date: '28 июня 2026 г.', isLocal: false });
-            for (let i = generatedReviewsList.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [generatedReviewsList[i], generatedReviewsList[j]] = [generatedReviewsList[j], generatedReviewsList[i]]; }
         }
         function getSavedUserReviews() { try { return JSON.parse(localStorage.getItem('my_local_reviews') || '[]'); } catch(e) { return []; } }
         function pickRating(val) {
@@ -1998,7 +2458,7 @@
             const nick = document.getElementById('reviewNickInput').value.trim() || currentUsername;
             const gift = document.getElementById('reviewGiftInput').value.trim() || 'Item';
             const text = document.getElementById('reviewTextInput').value.trim();
-            if (!text) { tg ? tg.showAlert('Пожалуйста, напишите отзыв!') : alert('Напишите отзыв!'); return; }
+            if (!text) { showToast('Пожалуйста, напишите отзыв!'); return; }
             const userReviews = getSavedUserReviews();
             userReviews.unshift({ name: nick.startsWith('@') ? nick : '@' + nick, gift, stars: selectedStars, text, date: 'Только что', isLocal: true });
             localStorage.setItem('my_local_reviews', JSON.stringify(userReviews));
@@ -2008,7 +2468,7 @@
             pickRating(5);
             reviewsRenderLimit = 20;
             renderReviewsFeed();
-            tg ? tg.showAlert('Отзыв сохранён локально!') : alert('Опубликовано локально!');
+            showToast('Отзыв опубликован!');
         }
         function renderReviewsFeed() {
             generateDatabaseOfReviews();
@@ -2034,10 +2494,12 @@
         function openTransactionsModal() { openModal('transactionsModal'); }
         function openLanguagesModal() { openModal('languagesModal'); }
 
-        // Старт приложения
+        // Инициализация при старте
         startCountdown();
+        updateBalancesDisplay();
         renderDealsList();
         updateProfileStats();
+        checkInviteLinkOnStart();
         setAppLanguage(currentLang);
         setTheme(getInitialTheme());
     </script>
