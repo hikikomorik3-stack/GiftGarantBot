@@ -2184,17 +2184,13 @@
             }
         }
 
-                function shareDealLink() {
+        function shareDealLink() {
             const deal = userDealsList.find(d => d.id === currentlyOpenedDealId);
             if (!deal) return;
             
             const dealCode = deal.id.replace('#', '');
-            
-            // Точный юзернейм бота (без @)
-            const currentBot = tg?.initDataUnsafe?.bot?.username || botUsername || 'ИМЯ_ВАШЕГО_БОТА';
-            
-            // Короткое имя приложения, заданное в BotFather через /newapp
-            const APP_SHORT_NAME = "app"; 
+            const currentBot = tg?.initDataUnsafe?.bot?.username || botUsername || 'TestOtsGurantBot';
+            const APP_SHORT_NAME = "app"; // Укажите короткое имя вашего приложения из BotFather (/newapp)
 
             const roleCode = deal.creatorRole === 'seller' ? 's' : 'b';
             
@@ -2203,15 +2199,17 @@
 
             const payload = `d_${dealCode}_${roleCode}_${deal.amount}_${deal.curr}_${descCode}`;
 
-            // Прямая ссылка: открывает Mini App сразу, минуя текстовый чат с ботом
+            // Прямая ссылка на Mini App
             const miniAppDirectLink = `https://t.me/${currentBot}/${APP_SHORT_NAME}?startapp=${payload}`;
 
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(miniAppDirectLink).then(() => {
-                    showToast(`🔗 <b>Ссылка скопирована!</b>`);
+                    showToast(`🔗 <b>Ссылка скопирована!</b><br><small>Ссылка открывает Mini App напрямую</small>`);
                 }).catch(() => {
-                    showToast(`🔗 <b>Ссылка:</b><br><small>${miniAppDirectLink}</small>`);
+                    showToast(`🔗 <b>Ссылка на Mini App:</b><br><small>${miniAppDirectLink}</small>`);
                 });
+            } else {
+                showToast(`🔗 <b>Ссылка на Mini App:</b><br><small>${miniAppDirectLink}</small>`);
             }
 
             if (tg?.openTelegramLink) {
