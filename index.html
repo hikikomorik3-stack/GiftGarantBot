@@ -2184,45 +2184,43 @@
             }
         }
 
-        function shareDealLink() {
+                function shareDealLink() {
             const deal = userDealsList.find(d => d.id === currentlyOpenedDealId);
             if (!deal) return;
             
             const dealCode = deal.id.replace('#', '');
             
-            // Вставьте СЮДА точный юзернейм вашего бота без знака @
-            const EXACT_BOT_USERNAME = "TestOtsGurantBot"; 
+            // Точный юзернейм бота (без @)
+            const currentBot = tg?.initDataUnsafe?.bot?.username || botUsername || 'ИМЯ_ВАШЕГО_БОТА';
             
-            const currentBot = tg?.initDataUnsafe?.bot?.username || EXACT_BOT_USERNAME;
+            // Короткое имя приложения, заданное в BotFather через /newapp
+            const APP_SHORT_NAME = "app"; 
+
             const roleCode = deal.creatorRole === 'seller' ? 's' : 'b';
             
             let descCode = 'g';
             if (deal.desc.includes('Аккаунт')) descCode = 'a';
 
             const payload = `d_${dealCode}_${roleCode}_${deal.amount}_${deal.curr}_${descCode}`;
-            
-            // Если в BotFather настроен Mini App (Direct Link):
-            const directLink = `https://t.me/${currentBot}?startapp=${payload}`;
 
-            // Если Mini App еще не настроен в BotFather, используйте обычный старт бота:
-            // const directLink = `https://t.me/${currentBot}?start=${payload}`;
+            // Прямая ссылка: открывает Mini App сразу, минуя текстовый чат с ботом
+            const miniAppDirectLink = `https://t.me/${currentBot}/${APP_SHORT_NAME}?startapp=${payload}`;
 
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(directLink).then(() => {
+                navigator.clipboard.writeText(miniAppDirectLink).then(() => {
                     showToast(`🔗 <b>Ссылка скопирована!</b>`);
                 }).catch(() => {
-                    showToast(`🔗 <b>Ссылка:</b><br><small>${directLink}</small>`);
+                    showToast(`🔗 <b>Ссылка:</b><br><small>${miniAppDirectLink}</small>`);
                 });
             }
 
             if (tg?.openTelegramLink) {
                 try {
                     const shareText = `🤝 Приглашение в безопасную сделку funpay ${deal.id} (${deal.amount} ${deal.curr})`;
-                    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(directLink)}&text=${encodeURIComponent(shareText)}`);
+                    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(miniAppDirectLink)}&text=${encodeURIComponent(shareText)}`);
                 } catch(e) {}
             }
         }
-
 
         function cancelActiveDeal() {
             const deal = userDealsList.find(d => d.id === currentlyOpenedDealId);
