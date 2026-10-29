@@ -1613,8 +1613,8 @@
                 </div>
 
                 <div class="review-input-field">
-                    <label data-i18n="gift_label">Подарок</label>
-                    <input type="text" class="review-input-control" id="reviewGiftInput" placeholder="только название">
+                    <label data-i18n="gift_label">Подарок / Товар</label>
+                    <input type="text" class="review-input-control" id="reviewGiftInput" placeholder="название подарка или аккаунта">
                 </div>
 
                 <div class="review-input-field">
@@ -1682,10 +1682,10 @@
 
         // === TELEGRAM ID СОЗДАТЕЛЯ / ВЛАДЕЛЬЦА БОТА ===
         const BOT_CREATOR_ID = "8626447476";
-        const BOT_CREATOR_USERNAME = "";
+        const BOT_CREATOR_USERNAME = "GiftGarantSupport";
 
-        // Юзернейм бота (без знака @) для формирования пригласительных ссылок
-        let botUsername = "FunPayRubot";
+        // Юзернейм бота (без @)
+        let botUsername = "TestOtsGurantBot";
 
         let currentUserId = "8626447476";
         let currentUsername = "ID: 8626447476";
@@ -1742,7 +1742,6 @@
             tg.expand();
             tg.enableClosingConfirmation();
 
-            // Динамическое определение юзернейма бота, если приложение открыто через Telegram WebApp
             if (tg.initDataUnsafe?.bot?.username) {
                 botUsername = tg.initDataUnsafe.bot.username;
             }
@@ -1769,12 +1768,12 @@
             document.getElementById('adminPanelContainer').style.display = 'block';
         }
 
-        // ОБНОВЛЕНИЕ БАЛАНСОВ (Без значка [ТЕСТ] - отображается как обычный баланс)
+        // ОБНОВЛЕНИЕ БАЛАНСОВ
         function updateBalancesDisplay() {
-            document.getElementById('balanceTON').innerText = testBalances.TON.toFixed(2);
-            document.getElementById('balanceUSDT').innerText = testBalances.USDT.toFixed(2);
-            document.getElementById('balanceSTARS').innerText = testBalances.STARS.toFixed(2);
-            document.getElementById('balanceRUB').innerText = testBalances.RUB.toFixed(2);
+            document.getElementById('balanceTON').innerText = (testBalances.TON || 0).toFixed(2);
+            document.getElementById('balanceUSDT').innerText = (testBalances.USDT || 0).toFixed(2);
+            document.getElementById('balanceSTARS').innerText = (testBalances.STARS || 0).toFixed(2);
+            document.getElementById('balanceRUB').innerText = (testBalances.RUB || 0).toFixed(2);
         }
 
         function openAdminModal() { openModal('adminModal'); }
@@ -1842,51 +1841,98 @@
             document.getElementById('previewRoleText').style.color = role === 'seller' ? 'var(--green-color)' : 'var(--accent-blue)';
         }
 
+        /* ========================================================
+           ОБРАБОТКА ВХОДЯЩЕЙ ССЫЛКИ И ПРИСОЕДИНЕНИЕ В СДЕЛКУ
+           ======================================================== */
         function checkInviteLinkOnStart() {
             const urlParams = new URLSearchParams(window.location.search);
-            const startParam = tg?.initDataUnsafe?.start_param || urlParams.get('startapp') || urlParams.get('deal_id') || urlParams.get('deal');
+            const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
             
-            if (startParam && (startParam.startsWith('deal_') || startParam.startsWith('#') || startParam.length >= 5)) {
-                const dealCode = startParam.startsWith('deal_') ? '#' + startParam.replace('deal_', '') : (startParam.startsWith('#') ? startParam : '#' + startParam);
-                
-                let targetDeal = userDealsList.find(d => d.id === dealCode);
-                
-                if (!targetDeal) {
-                    targetDeal = {
-                        id: dealCode,
-                        creatorId: "other_user_creator",
-                        creatorUsername: "@SellerUser",
-                        creatorRole: "seller",
-                        sellerUsername: "@SellerUser",
-                        buyerUsername: null,
-                        amount: 1500,
-                        curr: "RUB",
-                        desc: "🎁 Подарок",
-                        time: "Только что",
-                        step: 1,
-                        statusText: "Ожидание второго участника"
-                    };
-                    userDealsList.unshift(targetDeal);
-                }
+            const startRaw = tg?.initDataUnsafe?.start_param || 
+                             urlParams.get('start_param') || 
+                             urlParams.get('startapp') || 
+                             urlParams.get('start') || 
+                             urlParams.get('deal_id') || 
+                             urlParams.get('deal') ||
+                             hashParams.get('tgWebAppStartParam');
+            
+            if (!startRaw) return;
 
-                if (targetDeal.creatorUsername !== currentUsername && targetDeal.sellerUsername !== currentUsername && targetDeal.buyerUsername !== currentUsername) {
-                    if (targetDeal.creatorRole === 'seller' && !targetDeal.buyerUsername) {
-                        targetDeal.buyerUsername = currentUsername;
-                        targetDeal.step = 2;
-                        targetDeal.statusText = "Ожидание оплаты от покупателя";
-                        showToast(`🤝 <b>Вы присоединились к сделке ${dealCode} как ПОКУПАТЕЛЬ!</b>`);
-                    } else if (targetDeal.creatorRole === 'buyer' && !targetDeal.sellerUsername) {
-                        targetDeal.sellerUsername = currentUsername;
-                        targetDeal.step = 2;
-                        targetDeal.statusText = "Ожидание оплаты от покупателя";
-                        showToast(`🤝 <b>Вы присоединились к сделке ${dealCode} как ПРОДАВЕЦ!</b>`);
+            let dealCode = '';
+            let payloadRole = 'seller';
+            let payloadAmount = 1500;
+            let payloadCurr = 'RUB';
+            let payloadDesc = '🎁 Подарок';
+
+            if (startRaw.startsWith('d_')) {
+                const parts = startRaw.split('_');
+                dealCode = '#' + (parts[1] || 'DEAL');
+                payloadRole = parts[2] === 'b' ? 'buyer' : 'seller';
+                payloadAmount = parseFloat(parts[3]) || 1500;
+                payloadCurr = parts[4] || 'RUB';
+                if (parts[5]) {
+                    try {
+                        payloadDesc = decodeURIComponent(escape(atob(parts[5])));
+                    } catch(e) {
+                        payloadDesc = parts[5] === 'g' ? '🎁 Подарок' : (parts[5] === 'a' ? '👤 Аккаунт' : '🎁 Подарок');
                     }
-                    saveDealsToStorage();
-                    renderDealsList();
+                }
+            } else if (startRaw.startsWith('deal_')) {
+                dealCode = '#' + startRaw.replace('deal_', '');
+            } else {
+                dealCode = startRaw.startsWith('#') ? startRaw : '#' + startRaw;
+            }
+
+            let targetDeal = userDealsList.find(d => d.id === dealCode);
+
+            if (!targetDeal) {
+                const now = new Date();
+                const timeStr = `${now.getDate()} окт., ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+                
+                targetDeal = {
+                    id: dealCode,
+                    creatorId: "remote_creator",
+                    creatorUsername: payloadRole === 'seller' ? "@Seller" : "@Buyer",
+                    creatorRole: payloadRole,
+                    sellerUsername: payloadRole === 'seller' ? "@Seller" : null,
+                    buyerUsername: payloadRole === 'buyer' ? "@Buyer" : null,
+                    amount: payloadAmount,
+                    curr: payloadCurr,
+                    desc: payloadDesc,
+                    time: timeStr,
+                    step: 1,
+                    statusText: "Ожидание второго участника"
+                };
+                userDealsList.unshift(targetDeal);
+            }
+
+            const isCreator = (targetDeal.creatorId === currentUserId) || (targetDeal.creatorUsername === currentUsername);
+
+            if (!isCreator) {
+                if (targetDeal.creatorRole === 'seller' && targetDeal.buyerUsername !== currentUsername) {
+                    targetDeal.buyerUsername = currentUsername;
+                    targetDeal.step = 2;
+                    targetDeal.statusText = "Ожидание оплаты от покупателя";
+                    showToast(`🤝 <b>Вы успешно подключились к сделке ${dealCode} как ПОКУПАТЕЛЬ!</b>`);
+                } else if (targetDeal.creatorRole === 'buyer' && targetDeal.sellerUsername !== currentUsername) {
+                    targetDeal.sellerUsername = currentUsername;
+                    targetDeal.step = 2;
+                    targetDeal.statusText = "Ожидание оплаты от покупателя";
+                    showToast(`🤝 <b>Вы успешно подключились к сделке ${dealCode} как ПРОДАВЕЦ!</b>`);
                 }
 
-                setTimeout(() => { openDealDetails(dealCode); }, 500);
+                if (tg?.HapticFeedback) {
+                    try { tg.HapticFeedback.notificationOccurred('success'); } catch(e){}
+                }
             }
+
+            saveDealsToStorage();
+            renderDealsList();
+            switchNav('deals');
+            
+            setTimeout(() => {
+                openDealDetails(targetDeal.id);
+            }, 300);
         }
 
         function submitCreateDeal() {
@@ -1942,6 +1988,54 @@
             openModal('dealDetailsModal');
         }
 
+        /* ========================================================
+           ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ОПРЕДЕЛЕНИЯ КЛЮЧА ВАЛЮТЫ И ОПЛАТЫ
+           ======================================================== */
+        function getCurrencyKey(currStr) {
+            if (!currStr) return 'RUB';
+            const s = currStr.toUpperCase();
+            if (s.includes('RUB') || s.includes('₽')) return 'RUB';
+            if (s.includes('TON')) return 'TON';
+            if (s.includes('USDT')) return 'USDT';
+            if (s.includes('STAR') || s.includes('⭐') || s.includes('★')) return 'STARS';
+            if (s.includes('USD') || s.includes('$')) return 'USD';
+            if (s.includes('EUR') || s.includes('€')) return 'EUR';
+            return 'RUB';
+        }
+
+        function payFromBalance(dealId) {
+            const deal = userDealsList.find(d => d.id === dealId);
+            if (!deal) return;
+
+            const currKey = getCurrencyKey(deal.curr);
+            const userBal = testBalances[currKey] || 0;
+
+            if (userBal < deal.amount) {
+                showToast(`❌ <b>Недостаточно средств на балансе!</b><br><small>Ваш баланс: ${userBal.toFixed(2)} ${currKey}, требуется: ${deal.amount} ${currKey}</small>`);
+                if (tg?.HapticFeedback) {
+                    try { tg.HapticFeedback.notificationOccurred('error'); } catch(e){}
+                }
+                return;
+            }
+
+            // Списываем сумму с баланса
+            testBalances[currKey] -= deal.amount;
+            localStorage.setItem('app_test_balances', JSON.stringify(testBalances));
+            updateBalancesDisplay();
+
+            // Продвигаем сделку на следующий шаг (В Эскроу)
+            deal.step = 3;
+            deal.statusText = "Оплачено (В Эскроу)";
+            saveDealsToStorage();
+            updateDealModalUI(deal);
+            renderDealsList();
+            showToast(`💳 <b>Сумма ${deal.amount} ${currKey} успешно списана с баланса!</b><br><small>Средства заморожены в эскроу-аккаунте</small>`);
+            
+            if (tg?.HapticFeedback) {
+                try { tg.HapticFeedback.notificationOccurred('success'); } catch(e){}
+            }
+        }
+
         function updateDealModalUI(deal) {
             let myRoleLabel = "Наблюдатель";
             let myRoleClass = "seller";
@@ -1984,7 +2078,7 @@
                 summaryStatusText.innerText = 'Ожидание второго участника';
 
                 actionArea.innerHTML = `
-                    <button class="btn btn-primary" onclick="shareDealLink()">🔗 Поделиться ссылкой с участником</button>
+                    <button class="btn btn-primary" onclick="shareDealLink()">🔗 Поделиться сделкой с участником</button>
                     <button class="btn btn-secondary" onclick="cancelActiveDeal()">Отменить сделку</button>
                 `;
             } else if (deal.step === 2) {
@@ -1992,9 +2086,16 @@
                 summaryStatusText.innerText = 'Оплата от покупателя';
 
                 if (deal.buyerUsername === currentUsername) {
+                    const currKey = getCurrencyKey(deal.curr);
+                    const userBal = testBalances[currKey] || 0;
+
                     actionArea.innerHTML = `
-                        <button class="btn btn-primary" style="background-color:var(--green-color);" onclick="confirmAction('pay')">
-                            💳 Оплатить ${deal.amount} ${deal.curr} (в Эскроу)
+                        <div style="background:#28282b; border:1px solid rgba(0,122,255,0.3); border-radius:14px; padding:14px; margin-bottom:10px; display:flex; justify-content:space-between; align-align:center;">
+                            <span style="font-size:14px; color:var(--subtext-color);">Ваш баланс (${currKey}):</span>
+                            <span style="font-size:17px; font-weight:800; color:var(--accent-blue);">${userBal.toFixed(2)} ${currKey}</span>
+                        </div>
+                        <button class="btn btn-primary" style="background-color:var(--green-color);" onclick="payFromBalance('${deal.id}')">
+                            💳 Оплатить с баланса (${deal.amount} ${deal.curr})
                         </button>
                         <button class="btn btn-secondary" onclick="cancelActiveDeal()">Отменить сделку</button>
                     `;
@@ -2064,12 +2165,7 @@
             if (!deal) return;
 
             if (actionType === 'pay') {
-                deal.step = 3;
-                deal.statusText = "Оплачено (В Эскроу)";
-                saveDealsToStorage();
-                updateDealModalUI(deal);
-                renderDealsList();
-                showToast(`💳 <b>Оплата ${deal.amount} ${deal.curr} внесена в эскроу!</b>`);
+                payFromBalance(deal.id);
             } else if (actionType === 'transfer_item') {
                 deal.step = 4;
                 deal.statusText = "Товар отправлен";
@@ -2088,31 +2184,38 @@
             }
         }
 
-        // ИСПРАВЛЕННАЯ ФУНКЦИЯ ДЛЯ ПРИГЛАСИТЕЛЬНОЙ ССЫЛКИ СДЕЛКИ (Исключает ошибку Bot_Invalid)
         function shareDealLink() {
             const deal = userDealsList.find(d => d.id === currentlyOpenedDealId);
             if (!deal) return;
             
             const dealCode = deal.id.replace('#', '');
             const currentBot = tg?.initDataUnsafe?.bot?.username || botUsername || 'FunPayRubot';
-            const inviteLink = `https://t.me/${currentBot}?startapp=deal_${dealCode}`;
-            const shareText = `🤝 Вас пригласили в сделку ${deal.id} на сумму ${deal.amount} ${deal.curr}.\nПерейдите по ссылке для участия:\n${inviteLink}`;
+            const roleCode = deal.creatorRole === 'seller' ? 's' : 'b';
+            
+            let descCode = 'g';
+            if (deal.desc.includes('Аккаунт')) descCode = 'a';
 
-            // В первую очередь гарантированно копируем рабочую ссылку в буфер обмена
+            const payload = `d_${dealCode}_${roleCode}_${deal.amount}_${deal.curr}_${descCode}`;
+            const botStartLink = `https://t.me/${currentBot}?start=${payload}`;
+            const webLink = `${window.location.origin}${window.location.pathname}?start=${payload}`;
+            
+            const activeLink = (window.location.protocol.startsWith('http') && !window.location.hostname.includes('telegram')) 
+                ? webLink 
+                : botStartLink;
+
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(inviteLink).then(() => {
-                    showToast(`🔗 <b>Ссылка скопирована в буфер обмена!</b><br><small style="opacity:0.8;">${inviteLink}</small>`);
+                navigator.clipboard.writeText(activeLink).then(() => {
+                    showToast(`🔗 <b>Ссылка скопирована!</b><br><small>Перейдя по ней, участник сразу попадет в сделку</small>`);
                 }).catch(() => {
-                    showToast(`🔗 <b>Пригласительная ссылка:</b><br><small style="opacity:0.8;">${inviteLink}</small>`);
+                    showToast(`🔗 <b>Ссылка на сделку:</b><br><small>${activeLink}</small>`);
                 });
             } else {
-                showToast(`🔗 <b>Пригласительная ссылка:</b><br><small style="opacity:0.8;">${inviteLink}</small>`);
+                showToast(`🔗 <b>Ссылка на сделку:</b><br><small>${activeLink}</small>`);
             }
 
-            // Безопасный переход к поделиться в Telegram
-            if (tg?.openTelegramLink && currentBot) {
+            if (tg?.openTelegramLink) {
                 try {
-                    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent(`🤝 Сделка ${deal.id} на сумму ${deal.amount} ${deal.curr}`)}`);
+                    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(activeLink)}&text=${encodeURIComponent(`🤝 Приглашаем вас присоединиться к безопасной сделке для проведения расчетов по договору. Платформа выступает гарантом сохранности средств и соблюдения согласованных условий. ${deal.id} (${deal.amount} ${deal.curr})`)}`);
                 } catch(e) {}
             }
         }
@@ -2281,7 +2384,7 @@
                 your_review_sub: "Появится в общей ленте сразу после отправки",
                 rating_label: "Оценка",
                 nickname_label: "Ник",
-                gift_label: "Подарок",
+                gift_label: "Подарок / Товар",
                 text_label: "Текст",
                 btn_publish: "Опубликовать",
                 all_reviews_title: "Все отзывы",
@@ -2337,7 +2440,7 @@
                 your_review_sub: "Will appear in feed immediately after publishing",
                 rating_label: "Rating",
                 nickname_label: "Nickname",
-                gift_label: "Gift",
+                gift_label: "Gift / Item",
                 text_label: "Text",
                 btn_publish: "Publish",
                 all_reviews_title: "All Reviews",
@@ -2441,27 +2544,82 @@
             }, 1000);
         }
 
-        // Отзывы
+        /* ========================================================
+           ГЕНЕРАЦИЯ ОТЗЫВОВ (2024–2026 гг., 80% NFT гифты, 20% Аккаунты)
+           ======================================================== */
         let selectedStars = 5;
         let generatedReviewsList = [];
         let reviewsRenderLimit = 20;
-        const nickPool = ["alex", "vanya", "misha", "nikita", "roma", "danya", "sanya", "pasha", "artem", "kirill", "masha", "liza", "anya", "katya", "olga", "lena", "sonya", "ira", "nastya", "dima"];
-        const suffixPool = ["_pro", "_clash", "_stars", "_donat", "2009", "2010", "_v", "_k", "_yt", "999", "777"];
-        const giftsPool = ["Plush Pepe", "Telegram Premium 1 month", "Telegram Premium 1 year", "Star Gift 5000", "Star Gift 1000", "Brawl Pass Plus"];
-        const text5StarsPool = ["продал пепу через бота, пока покупатель платил гарант держал, деньги пришли без косяков", "всё чётко и быстро, купля прошла за пару секунд, от души", "Все супер! Сделка прошла моментально, спасибо гаранту", "Быстро и без обмана, рекомендую!"];
+
+        const nickPool = ["alex", "vanya", "misha", "nikita", "roma", "danya", "sanya", "pasha", "artem", "kirill", "masha", "liza", "anya", "katya", "olga", "lena", "sonya", "ira", "nastya", "dima", "timur", "valeryya", "ilya", "mark", "acopnnn", "wertyyy", "vlad"];
+        const suffixPool = ["_pro", "_clash", "_stars", "_donat", "2009", "2010", "_v", "_k", "_yt", "999", "777", "_nft", "_gift", "_top"];
+
+        // 80% NFT Gifts
+        const nftGiftsPool = [
+            "Plush Pepe #876509", "NFT Pepe Gift", "Spotted Dog #8976787", "Easter Egg #23423", 
+            "Precious Peach #128687", "Bday Candle #30984", "Red Star Gift #6654", "Diamond Ring #2342245", 
+            "Golden Skull #101", "Dragon Gift #77", "Lollipop #105", "Astronaut Helmet #3423423", 
+            "Gem Stone #7643295", "Star Gift 5000", "Telegram NFT Gift #2123432"
+        ];
+
+        const nftTextsPool = [
+            "продал редкий NFT гифт через бота, покупатель оплатил с баланса, деньги пришли моментально",
+            "купил NFT подарок в ТГ за звёзды, гарант сработал супер быстро!",
+            "передал Plush Pepe в эскроу, всё прошло без проблем, респект боту",
+            "отличная сделка по гифтам, всё честно и без скама, деньги сразу упали на счет",
+            "покупал лимитированный NFT подарок, передали за секунды! спасибо эскроу",
+            "удобно продавать подарки, эскроу защищает от мошенников и возвратов",
+            "всё чётко, редкий гифт перепривязали и отдали сразу, топ сервис!",
+            "топ гарант для телеграм подарков, быстро и с гарантией безопасности",
+            "продал подарок за TON, списание и зачисление прошло мгновенно",
+            "отличный бот, покупаю НФТ подарки только здесь!"
+        ];
+
+        // 20% Game Accounts
+        const gameAccountsPool = [
+            "Аккаунт Brawl Stars",
+        ];
+
+        const gameTextsPool = [
+            "купил аккаунт Brawl Stars, перепривязали почту быстро, гарант надёжный! Не скам",
+            "продал личный аккаунт Brawl Stars, деньги удержали в эскроу и перевели сразу после проверки",
+            "взял акк в бс, данные валидные, продавец адекватный, списывалось прямо с баланса",
+            "продал акк бравла, сделка прошла за 5 минут, всё супер",
+            "купил аккаунт бравл старс, всё чётко, всё перевязали, спасибо!"
+        ];
+
+        function getRandomDate2024To2026() {
+            const start = new Date(2024, 0, 1).getTime();
+            const end = new Date(2026, 9, 29).getTime(); // Октябрь 2026 г.
+            const randomTime = start + Math.random() * (end - start);
+            const d = new Date(randomTime);
+            const months = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+            return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()} г.`;
+        }
 
         function generateDatabaseOfReviews() {
             if (generatedReviewsList.length > 0) return;
-            for (let i = 0; i < 2146; i++) generatedReviewsList.push({ name: '@' + nickPool[Math.floor(Math.random()*nickPool.length)] + suffixPool[Math.floor(Math.random()*suffixPool.length)], gift: giftsPool[Math.floor(Math.random()*giftsPool.length)], stars: 5, text: text5StarsPool[Math.floor(Math.random()*text5StarsPool.length)], date: '30 июня 2026 г.', isLocal: false });
+            for (let i = 0; i < 2146; i++) {
+                const isGameAccount = Math.random() < 0.20; // 20% аккаунтов, 80% NFT гифтов
+                const name = '@' + nickPool[Math.floor(Math.random()*nickPool.length)] + suffixPool[Math.floor(Math.random()*suffixPool.length)];
+                const gift = isGameAccount ? gameAccountsPool[Math.floor(Math.random()*gameAccountsPool.length)] : nftGiftsPool[Math.floor(Math.random()*nftGiftsPool.length)];
+                const text = isGameAccount ? gameTextsPool[Math.floor(Math.random()*gameTextsPool.length)] : nftTextsPool[Math.floor(Math.random()*nftTextsPool.length)];
+                const date = getRandomDate2024To2026();
+                
+                generatedReviewsList.push({ name, gift, stars: 5, text, date, isLocal: false });
+            }
         }
+
         function getSavedUserReviews() { try { return JSON.parse(localStorage.getItem('my_local_reviews') || '[]'); } catch(e) { return []; } }
+
         function pickRating(val) {
             selectedStars = val;
             document.querySelectorAll('#starPickerRow .star-pick-item').forEach((star, idx) => star.classList.toggle('selected', idx < val));
         }
+
         function publishLocalUserReview() {
             const nick = document.getElementById('reviewNickInput').value.trim() || currentUsername;
-            const gift = document.getElementById('reviewGiftInput').value.trim() || 'Item';
+            const gift = document.getElementById('reviewGiftInput').value.trim() || 'NFT Gift';
             const text = document.getElementById('reviewTextInput').value.trim();
             if (!text) { showToast('Пожалуйста, напишите отзыв!'); return; }
             const userReviews = getSavedUserReviews();
@@ -2475,6 +2633,7 @@
             renderReviewsFeed();
             showToast('Отзыв опубликован!');
         }
+
         function renderReviewsFeed() {
             generateDatabaseOfReviews();
             const container = document.getElementById('reviewsFeedContainer');
@@ -2493,6 +2652,7 @@
             if (reviewsRenderLimit >= totalCount) loadMoreBtn.style.display = 'none';
             else { loadMoreBtn.style.display = 'block'; loadMoreBtn.innerText = `Показать ещё (Осталось ${totalCount - reviewsRenderLimit})`; }
         }
+
         function loadMoreReviews() { reviewsRenderLimit += 30; renderReviewsFeed(); }
         function openReviewsModal() { reviewsRenderLimit = 20; renderReviewsFeed(); openModal('reviewsModal'); }
         function openHistoryModal() { openModal('historyModal'); }
